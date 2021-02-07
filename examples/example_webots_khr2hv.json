@@ -1,0 +1,77 @@
+{
+  "id": "webots_khr2hv_v1",
+  "version": "0.1",
+  "name": "Example robot configuration for Webots",
+  "motors": {
+    "head_z": {
+      "id": "Head",
+      "offset": 0.0,
+      "type": "virtual-servo",
+      "angle_limit": [
+        -75,
+        75
+      ],
+      "orientation": "direct"
+    },
+    "l_elbow_y": {
+      "id": "Left_Hand",
+      "offset": 0.0,
+      "type": "virtual-servo",
+      "angle_limit": [
+        -10,
+        125
+      ],
+      "orientation": "direct"
+    },
+    "r_elbow_y": {
+      "id": "Right_Hand",
+      "offset": 0.0,
+      "type": "virtual-servo",
+      "angle_limit": [
+        -10,
+        125
+      ],
+      "orientation": "indirect"
+    },
+    "l_shoulder_x": {
+      "id": "Left_Shoulder",
+      "offset": 0.0,
+      "type": "virtual-servo",
+      "angle_limit": [
+        -90,
+        90
+      ],
+      "orientation": "direct"
+    },
+    "r_shoulder_x": {
+      "id": "Right_Shoulder",
+      "offset": 0.0,
+      "type": "virtual-servo",
+      "angle_limit": [
+        -90,
+        90
+      ],
+      "orientation": "indirect"
+    },
+    "l_shoulder_y": {
+      "id": "Left_Arm1",
+      "offset": 0.0,
+      "type": "virtual-servo",
+      "angle_limit": [
+        0,
+        135
+      ],
+      "orientation": "direct"
+    },
+    "r_shoulder_y": {
+      "id": "Right_Arm1",
+      "offset": 0.0,
+      "type": "virtual-servo",
+      "angle_limit": [
+        0,
+        135
+      ],
+      "orientation": "indirect"
+    }
+  }
+}

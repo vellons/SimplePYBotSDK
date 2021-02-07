@@ -1,0 +1,5 @@
+MOTORS_ANGLE_SPEED = {  # degree/sec
+    "virtual-servo": 60
+}
+MOTORS_CHECK_PER_SECOND = 20
+SOCKET_SEND_PER_SECOND = 20
