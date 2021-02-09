@@ -69,23 +69,28 @@ class RobotSDK:
         logger.debug("[motors_thread]: start handling {} motors".format(len(self.motors)))
         last_time = time.time()
         while True:
-            if (time.time() - last_time) > ((1 / self._motors_check_per_second) / self.robot_speed):
-                last_time = time.time()
-                for m in self.motors:  # Watching all motors
-                    speed = self.configuration["motors_type"][m.motor_type]["angle_speed"]  # Get motor degree/sec
-                    max_step = speed / self._motors_check_per_second
-                    if m.abs_goal_angle != m.abs_current_angle:  # Check if is in goal position
-                        step = m.abs_goal_angle - m.abs_current_angle
-                        if step > max_step:
-                            step = max_step
-                        elif step < -max_step:
-                            step = -max_step
+            try:
+                if (time.time() - last_time) > ((1 / self._motors_check_per_second) / self.robot_speed):
+                    last_time = time.time()
+                    for m in self.motors:  # Watching all motors
+                        speed = self.configuration["motors_type"][m.motor_type]["angle_speed"]  # Get motor degree/sec
+                        max_step = speed / self._motors_check_per_second
+                        if m.abs_goal_angle != m.abs_current_angle:  # Check if is in goal position
+                            step = m.abs_goal_angle - m.abs_current_angle
+                            if step > max_step:
+                                step = max_step
+                            elif step < -max_step:
+                                step = -max_step
 
-                        logger.debug("[motors_thread]: {}: {:.2f} -> {:.2f} [{:.2f}]".format(m.key,
-                                                                                             m.abs_current_angle,
-                                                                                             m.abs_goal_angle,
-                                                                                             step))
-                        m.abs_current_angle = m.abs_current_angle + step
+                            logger.debug("[motors_thread]: {}: {:.2f} -> {:.2f} [{:.2f}]".format(m.key,
+                                                                                                 m.abs_current_angle,
+                                                                                                 m.abs_goal_angle,
+                                                                                                 step))
+                            m.abs_current_angle = m.abs_current_angle + step
+            except Exception as e:
+                print("[motors_thread]: exception: {}".format(e))
+                logger.error("[motors_thread]: exception: {}".format(e))
+                pass
 
     def get_motor(self, key: str) -> Motor:
         """
