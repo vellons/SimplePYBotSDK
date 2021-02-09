@@ -118,16 +118,16 @@ class RobotSDK:
             motors.append({"id": m.id, "key": m.key, "angle": round(m.abs_current_angle, 1)})
         return motors
 
-    def get_robot_json_dump(self) -> dict:
+    def get_robot_dict_dump(self) -> dict:
         """
         :return: dict dump of current state of the robot.
         """
-        json_robot = {
+        dict_robot = {
             "motors": self.get_motors_list_current_angle(),
             "sensors": {},
             "timestamp": datetime.now().isoformat()
         }
-        return json_robot
+        return dict_robot
 
     def __str__(self):
         return "<RobotSDK {} with configuration: {}>".format(self.configuration["id"], self.configuration)

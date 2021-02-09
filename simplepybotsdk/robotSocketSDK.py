@@ -31,7 +31,7 @@ class RobotSocketSDK(RobotSDK):
         self._threaded_connection = []
         if self._socket_send_per_second is None:
             self._socket_send_per_second = configurations.SOCKET_SEND_PER_SECOND
-        logger.debug("RobotSocketSDK initialization on {}".format((self._socket_host, self._socket_port)))
+        logger.debug("RobotSocketSDK initialization")
 
         self._thread_socket = threading.Thread(target=self._socket_thread_handler, args=())
         self._thread_socket.daemon = True
@@ -42,10 +42,12 @@ class RobotSocketSDK(RobotSDK):
         Thread method to accept incoming socket connections.
         This thread create a new thread for every single connection request.
         """
-        logger.debug("[socket_thread]: start listening for connections")
+        logger.debug(
+            "[socket_thread]: start listening for connections on {}".format((self._socket_host, self._socket_port)))
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.bind((self._socket_host, self._socket_port))
         self._socket.listen(5)
+        print("[socket_thread]: listening for connections on {}".format((self._socket_host, self._socket_port)))
 
         while True:
             c, addr = self._socket.accept()
@@ -67,7 +69,7 @@ class RobotSocketSDK(RobotSDK):
             while True:
                 if (time.time() - last_time) > (1 / self._socket_send_per_second):
                     last_time = time.time()
-                    conn.send(json.dumps(self.get_robot_json_dump()).encode())
+                    conn.send(json.dumps(self.get_robot_dict_dump()).encode())
         except Exception as e:
             logger.info("[socket_thread]: connection closed from {}. {}".format(addr, e))
         finally:
