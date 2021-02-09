@@ -66,6 +66,11 @@ mot2.set_goal_angle(-45)
       ],
       "orientation": "indirect"
     }
+  },
+  "motors_type": {
+    "virtual-servo": {
+      "angle_speed": 60
+    }
   }
 }
 ```
