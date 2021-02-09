@@ -12,13 +12,11 @@ logger = logging.getLogger(__name__)
 class RobotSDK:
     """Base RobotSDK class."""
 
-    def __init__(self, config_path: str, robot_speed: int = 1, motors_check_per_second: int = None,
-                 motors_angle_speed: int = None):
+    def __init__(self, config_path: str, robot_speed: float = 1.0, motors_check_per_second: int = None):
         """
         :param config_path: SimplePYBotSDK json configuration file path.
         :param robot_speed: robot speed. Use this to make robot move slower or faster. Default is 1.
         :param motors_check_per_second: numbers of motor's check per second.
-        :param motors_angle_speed: dict with degree/sec for every motor used inside json configuration.
         """
         logger.debug("RobotSDK initialization")
         self.config_path = None
@@ -26,14 +24,10 @@ class RobotSDK:
         self.motors = []
         self.robot_speed = robot_speed
         self._motors_check_per_second = motors_check_per_second
-        self._motors_angle_speed = motors_angle_speed
         self._thread_motors = None
 
         if self._motors_check_per_second is None:
             self._motors_check_per_second = configurations.MOTORS_CHECK_PER_SECOND
-
-        if self._motors_angle_speed is None:
-            self._motors_angle_speed = configurations.MOTORS_ANGLE_SPEED
 
         self._init_robot(config_path)
 
@@ -78,7 +72,7 @@ class RobotSDK:
             if (time.time() - last_time) > ((1 / self._motors_check_per_second) / self.robot_speed):
                 last_time = time.time()
                 for m in self.motors:  # Watching all motors
-                    speed = self._motors_angle_speed[m.motor_type]  # Get motor degree/sec
+                    speed = self.configuration["motors_type"][m.motor_type]["angle_speed"]  # Get motor degree/sec
                     max_step = speed / self._motors_check_per_second
                     if m.abs_goal_angle != m.abs_current_angle:  # Check if is in goal position
                         step = m.abs_goal_angle - m.abs_current_angle
@@ -118,7 +112,7 @@ class RobotSDK:
             motors.append({"id": m.id, "key": m.key, "angle": round(m.abs_current_angle, 1)})
         return motors
 
-    def get_robot_dict_dump(self) -> dict:
+    def get_robot_dict_status(self) -> dict:
         """
         :return: dict dump of current state of the robot.
         """

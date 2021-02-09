@@ -12,19 +12,17 @@ logger = logging.getLogger(__name__)
 class RobotSocketSDK(RobotSDK):
     """RobotSDK + Socket layer for read only current state of robot's component."""
 
-    def __init__(self, config_path: str, socket_host: str, socket_port: int, robot_speed: int = 1,
-                 motors_check_per_second: int = None, motors_angle_speed: int = None,
-                 socket_send_per_second: int = None):
+    def __init__(self, config_path: str, socket_host: str, socket_port: int, robot_speed: float = 1.0,
+                 motors_check_per_second: int = None, socket_send_per_second: int = None):
         """
         :param config_path: SimplePYBotSDK json configuration file path.
         :param socket_host: socket host to listen.
         :param socket_port: socket port to listen.
         :param robot_speed: robot speed. Use this to make robot move slower or faster. Default is 1.
         :param motors_check_per_second: numbers of motor's check per second.
-        :param motors_angle_speed: dict with degree/sec for every motor used inside json configuration.
         :param socket_send_per_second: numbers of dump send to the socket client in 1 second.
         """
-        super().__init__(config_path, robot_speed, motors_check_per_second, motors_angle_speed)
+        super().__init__(config_path, robot_speed, motors_check_per_second)
         self._socket_host = socket_host
         self._socket_port = socket_port
         self._socket_send_per_second = socket_send_per_second
@@ -69,7 +67,7 @@ class RobotSocketSDK(RobotSDK):
             while True:
                 if (time.time() - last_time) > (1 / self._socket_send_per_second):
                     last_time = time.time()
-                    conn.send(json.dumps(self.get_robot_dict_dump()).encode())
+                    conn.send(json.dumps(self.get_robot_dict_status()).encode())
         except Exception as e:
             logger.info("[socket_thread]: connection closed from {}. {}".format(addr, e))
         finally:

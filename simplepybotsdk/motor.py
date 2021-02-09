@@ -21,8 +21,8 @@ class Motor:
         self.motor_type = motor_type
         self.angle_limit = angle_limit
         self.orientation = 1 if orientation == "indirect" else 0
-        self.abs_goal_angle = 0
-        self.abs_current_angle = 0
+        self.abs_goal_angle = 0.0
+        self.abs_current_angle = 0.0
         logger.debug("{}: initialization".format(self.key))
         self.set_goal_angle(0)
 
