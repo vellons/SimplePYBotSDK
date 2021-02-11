@@ -19,7 +19,7 @@ class RobotSocketSDK(RobotSDK):
         :param socket_host: socket host to listen.
         :param socket_port: socket port to listen.
         :param robot_speed: robot speed. Use this to make robot move slower or faster. Default is 1.
-        :param motors_check_per_second: numbers of motor's check per second.
+        :param motors_check_per_second: numbers of motor's check per second. Set to 0 to disable dedicated thread.
         :param socket_send_per_second: numbers of dump send to the socket client in 1 second.
         """
         super().__init__(config_path, robot_speed, motors_check_per_second)
@@ -69,6 +69,6 @@ class RobotSocketSDK(RobotSDK):
                     last_time = time.time()
                     conn.send(json.dumps(self.get_robot_dict_status()).encode())
         except Exception as e:
-            logger.info("[socket_thread]: connection closed from {}. {}".format(addr, e))
+            logger.info("[socket_thread]: connection with {} closed. {}".format(addr, e))
         finally:
             conn.close()

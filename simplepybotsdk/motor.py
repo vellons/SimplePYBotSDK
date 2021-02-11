@@ -6,7 +6,8 @@ logger = logging.getLogger(__name__)
 class Motor:
     """Base Motor class."""
 
-    def __init__(self, identifier: str, key: str, offset: int, motor_type: str, angle_limit: tuple, orientation: str):
+    def __init__(self, identifier: str, key: str, offset: int, motor_type: str, angle_limit: tuple, orientation: str,
+                 instant_mode: bool = False):
         """
         :param identifier: unique identifier for the motor.
         :param key: motor key. Different robot may have the same key for a motor that do the same movement.
@@ -14,6 +15,8 @@ class Motor:
         :param motor_type: motor string type. Used to know it angle/sec speed.
         :param angle_limit: movement range. Example: [-90, 90].
         :param orientation: "direct" or "indirect".
+        :param instant_mode: True if you want abs_goal_angle and abs_current_angle to be equal when use set_goal_angle.
+            If False motors thread will be activated in RobotSDK to move motors base on angle_speed.
         """
         self.id = identifier
         self.key = key
@@ -23,6 +26,7 @@ class Motor:
         self.orientation = 1 if orientation == "indirect" else 0
         self.abs_goal_angle = 0.0
         self.abs_current_angle = 0.0
+        self.instant_mode = instant_mode
         logger.debug("{}: initialization".format(self.key))
         self.set_goal_angle(0)
 
@@ -55,6 +59,8 @@ class Motor:
             self.abs_goal_angle = future_angle if self.orientation == 0 else -future_angle
             logger.warning("{}: set_goal_angle: {:.2f} -> {:.2f} [{:.2f}]".format(self.key, angle, self.angle_limit[1],
                                                                                   self.abs_goal_angle))
+        if self.instant_mode is True:
+            self.abs_current_angle = self.abs_goal_angle
         return self.get_goal_angle()
 
     def __str__(self):

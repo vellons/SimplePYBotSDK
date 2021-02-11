@@ -16,7 +16,7 @@ class RobotSDK:
         """
         :param config_path: SimplePYBotSDK json configuration file path.
         :param robot_speed: robot speed. Use this to make robot move slower or faster. Default is 1.
-        :param motors_check_per_second: numbers of motor's check per second.
+        :param motors_check_per_second: numbers of motor's check per second. Set to 0 to disable dedicated thread.
         """
         logger.debug("RobotSDK initialization")
         self.config_path = None
@@ -57,16 +57,24 @@ class RobotSDK:
                 offset=m["offset"],
                 motor_type=m["type"],
                 angle_limit=m["angle_limit"],
-                orientation=m["orientation"]
+                orientation=m["orientation"],
+                instant_mode=self._motors_check_per_second <= 0
             ))
         logger.debug("Motors initialization completed. Total motors: {} {}".format(len(self.motors), self.motors))
-        self._thread_motors = threading.Thread(target=self._motors_thread_handler, args=())
-        self._thread_motors.daemon = True
-        self._thread_motors.start()
+        if self._motors_check_per_second > 0:
+            self._thread_motors = threading.Thread(target=self._motors_thread_handler, args=())
+            self._thread_motors.daemon = True
+            self._thread_motors.start()
+        else:
+            logger.debug("[motors_thread]: thread to control motors disabled")
 
     def _motors_thread_handler(self):
-        """Dedicated thread to move motors to the goal angle position, based on motor angle/sec speed."""
+        """
+        Dedicated thread to move motors to the goal angle position, based on motor angle/sec speed.
+        If motor abs_goal_angle is different from abs_current_angle the motor will be moved based on its angle_speed.
+        """
         logger.debug("[motors_thread]: start handling {} motors".format(len(self.motors)))
+        print("[motors_thread]: start handling {} motors".format(len(self.motors)))
         last_time = time.time()
         while True:
             try:

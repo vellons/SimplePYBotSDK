@@ -1,9 +1,8 @@
 import logging
 import threading
-import json
+import socket
 from pyramid.config import Configurator
 from pyramid.response import Response
-from pyramid.view import view_config
 from wsgiref.simple_server import make_server
 from simplepybotsdk.robotSocketSDK import RobotSocketSDK as RobotSocketSDK
 
@@ -20,7 +19,7 @@ class RobotRESTSDK(RobotSocketSDK):
         :param socket_host: socket host to listen.
         :param socket_port: socket port to listen.
         :param robot_speed: robot speed. Use this to make robot move slower or faster. Default is 1.
-        :param motors_check_per_second: numbers of motor"s check per second.
+        :param motors_check_per_second: numbers of motor's check per second. Set to 0 to disable dedicated thread.
         :param socket_send_per_second: numbers of dump send to the socket client in 1 second.
         """
         super().__init__(config_path, socket_host, socket_port, robot_speed, motors_check_per_second,
@@ -61,7 +60,11 @@ class RobotRESTSDK(RobotSocketSDK):
 
     def _ws_thread_handler(self):
         logger.debug("[ws_thread]: start serving on {}".format((self._ws_host, self._ws_port)))
-        print("[ws_thread]: start serving on http://{}:{}/".format(self._ws_host, self._ws_port))
+        if self._ws_host == "0.0.0.0":
+            print("[ws_thread]: start serving on:\n\t- http://127.0.0.1:{}/\n\t- http://{}:{}/".format(
+                self._ws_port, socket.gethostbyname(socket.gethostname()), self._ws_port))
+        else:
+            print("[ws_thread]: start serving on: http://{}:{}/".format(self._ws_host, self._ws_port))
         self._server.serve_forever()
 
     def hello_world(self, root, request):
