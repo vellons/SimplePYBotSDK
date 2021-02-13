@@ -65,6 +65,28 @@
 			"response": []
 		},
 		{
+			"name": "robot/status/absolute/",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/api/v1/robot/status/absolute/",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"robot",
+						"status",
+						"absolute",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "robot/motors/",
 			"request": {
 				"method": "GET",
@@ -114,7 +136,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"abs_goal_angle\": 50}",
+					"raw": "{\"goal_angle\": 50}",
 					"options": {
 						"raw": {
 							"language": "json"

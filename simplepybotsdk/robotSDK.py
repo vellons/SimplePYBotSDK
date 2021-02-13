@@ -55,9 +55,9 @@ class RobotSDK:
                 identifier=m["id"],
                 key=key,
                 offset=m["offset"],
-                motor_type=m["type"],
                 angle_limit=m["angle_limit"],
                 orientation=m["orientation"],
+                motor_type=m["type"],
                 instant_mode=self._motors_check_per_second <= 0
             ))
         logger.debug("Motors initialization completed. Total motors: {} {}".format(len(self.motors), self.motors))
@@ -116,23 +116,51 @@ class RobotSDK:
         found = [m for m in self.motors if m.id == identifier]
         return found[0] if len(found) == 1 else None
 
-    def get_motors_list_current_angle(self) -> list:
+    def get_motors_list_abs_angles(self) -> list:
         """
-        :return: list of motors with current absolute angle, id and key.
+        :return: list of motors with absolute angle, id and key.
         """
         motors = []
         for m in self.motors:
-            motors.append({"id": m.id, "key": m.key, "angle": round(m.abs_current_angle, 1)})
+            motors.append({
+                "id": m.id,
+                "key": m.key,
+                "abs_goal_angle": round(m.abs_goal_angle, 1),
+                "abs_current_angle": round(m.abs_current_angle, 1)
+            })
         return motors
 
-    def get_robot_dict_status(self) -> dict:
+    def get_motors_list_relative_angles(self) -> list:
+        """
+        :return: list of motors with relative angle, id and key.
+        """
+        motors = []
+        for m in self.motors:
+            motors.append({
+                "id": m.id,
+                "key": m.key,
+                "goal_angle": round(m.to_relative_angle(m.abs_goal_angle), 1),
+                "current_angle": round(m.to_relative_angle(m.abs_current_angle), 1)
+            })
+        return motors
+
+    def get_system_infos(self) -> dict:
+        """
+        :return: dict of system infos.
+        """
+        return {
+            "timestamp": datetime.now().isoformat()
+        }
+
+    def get_robot_dict_status(self, absolute=False) -> dict:
         """
         :return: dict dump of current state of the robot.
         """
         dict_robot = {
-            "motors": self.get_motors_list_current_angle(),
+            "motors": self.get_motors_list_abs_angles() if absolute else self.get_motors_list_relative_angles(),
             "sensors": {},
-            "timestamp": datetime.now().isoformat()
+            "system": self.get_system_infos()
+
         }
         return dict_robot
 

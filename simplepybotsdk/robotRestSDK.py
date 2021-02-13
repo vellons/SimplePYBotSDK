@@ -41,6 +41,8 @@ class RobotRESTSDK(RobotSocketSDK):
             config.add_view(self.robot_configuration, route_name="robot_configuration")
             config.add_route("robot_status", "/api/v1/robot/status/", request_method="GET")
             config.add_view(self.robot_status, route_name="robot_status")
+            config.add_route("robot_status_absolute", "/api/v1/robot/status/absolute/", request_method="GET")
+            config.add_view(self.robot_status_absolute, route_name="robot_status_absolute")
             config.add_route("robot_motors", "/api/v1/robot/motors/", request_method="GET")
             config.add_view(self.robot_motors, route_name="robot_motors")
             config.add_route("robot_motor_detail_by_key", "/api/v1/robot/motors/{key}/", request_method="GET")
@@ -77,25 +79,28 @@ class RobotRESTSDK(RobotSocketSDK):
     def robot_status(self, root, request):
         return Response(json_body=self.get_robot_dict_status())
 
+    def robot_status_absolute(self, root, request):
+        return Response(json_body=self.get_robot_dict_status(absolute=True))
+
     def robot_motors(self, root, request):
         motors = []
         for m in self.motors:
-            motors.append(m.__dict__)
+            motors.append(dict(m))
         return Response(json_body=motors)
 
     def robot_motor_detail_by_key(self, root, request):
         m = self.get_motor(request.matchdict["key"])
         if m is None:
             return Response(json_body={"detail": "Not found."}, status=404)
-        return Response(json_body=m.__dict__)
+        return Response(json_body=dict(m))
 
     def robot_motor_patch_by_key(self, root, request):
         m = self.get_motor(request.matchdict["key"])
         if m is None:
             return Response(json_body={"detail": "Not found."}, status=404)
         try:
-            m.set_goal_angle(int(request.json_body["abs_goal_angle"]))
-            return Response(json_body=m.__dict__)
+            m.set_goal_angle(int(request.json_body["goal_angle"]))
+            return Response(json_body=dict(m))
         except Exception as e:
             logger.error("[ws_thread]: robot_motor_patch_by_key: {}".format(e))
             return Response(json_body={"detail": "Bad request. Use abs_goal_angle key"}, status=400)
