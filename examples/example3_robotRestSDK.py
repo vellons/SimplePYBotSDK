@@ -11,6 +11,7 @@ WS_PORT = 8080
 
 if __name__ == "__main__":
     print("Example3: Beginning test")
+    print("simplepybotsdk version is", simplepybotsdk.__version__)
     robot = simplepybotsdk.RobotRESTSDK(
         config_path="example_webots_khr2hv.json",
         socket_host=SOCKET_HOST,
