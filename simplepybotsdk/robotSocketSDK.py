@@ -3,6 +3,7 @@ import threading
 import json
 import time
 import socket
+from select import select
 import simplepybotsdk.configurations as configurations
 from simplepybotsdk.robotSDK import RobotSDK as RobotSDK
 
@@ -64,11 +65,52 @@ class RobotSocketSDK(RobotSDK):
         try:
             logger.info("[socket_thread]: got connection from: {}".format(addr))
             last_time = time.time()
+            absolute = False
             while True:
                 if (time.time() - last_time) > (1 / self._socket_send_per_second):
                     last_time = time.time()
-                    conn.send(json.dumps(self.get_robot_dict_status()).encode())
+                    got_message, message = self._socket_connect_return_json_if_received(conn, addr)
+                    if got_message:
+                        if "socket" in message and "format" in message["socket"]:
+                            f = message["socket"]["format"]
+                            if f == "absolute":
+                                logger.debug("[socket_thread]: connection: {} now use format: {}".format(addr, f))
+                                absolute = True
+                            if f == "relative":
+                                logger.debug("[socket_thread]: connection: {} now use format: {}".format(addr, f))
+                                absolute = False
+                        self.socket_recv_callback(message, addr)
+                    conn.send(json.dumps(self.get_robot_dict_status(absolute=absolute)).encode("utf-8"))
         except Exception as e:
             logger.info("[socket_thread]: connection with {} closed. {}".format(addr, e))
         finally:
             conn.close()
+
+    @staticmethod
+    def _socket_connect_return_json_if_received(conn, addr) -> (bool, dict):
+        """
+        Method to check if data is coming from the client. Only JSON data will be accepted and returned.
+        :param conn: socket connection instance.
+        :param addr: tuple with ip and socket of the client connected.
+        """
+        read_sockets, _, _ = select([conn], [], [], 0)
+        for s in read_sockets:
+            if s == conn:
+                data = s.recv(8196).decode("utf-8")
+                if len(data) > 0:
+                    logger.info("[socket_thread]: got message from: {}: {}".format(addr, data))
+                    try:
+                        j = json.loads(data)
+                        return True, j
+                    except Exception as e:
+                        print(e)
+                        logger.error("[socket_thread]: fail to decode message from: {}: {}. {}".format(addr, data, e))
+        return False, None
+
+    def socket_recv_callback(self, message, addr):
+        """
+        Method called when a message is received. Override this to parse message.
+        :param message: json message received.
+        :param addr: tuple with ip and socket of the client that send the message.
+        """
+        pass

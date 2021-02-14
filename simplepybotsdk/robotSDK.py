@@ -160,6 +160,7 @@ class RobotSDK:
         dict_robot = {
             "motors": self.get_motors_list_abs_angles() if absolute else self.get_motors_list_relative_angles(),
             "sensors": {},
+            "format": "absolute" if absolute else "relative",
             "system": self.get_system_infos()
 
         }
