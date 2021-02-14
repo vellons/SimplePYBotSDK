@@ -144,7 +144,8 @@ class RobotSDK:
             })
         return motors
 
-    def get_system_infos(self) -> dict:
+    @staticmethod
+    def get_system_infos() -> dict:
         """
         :return: dict of system infos.
         """

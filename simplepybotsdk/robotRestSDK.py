@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class RobotRESTSDK(RobotSocketSDK):
-    """RobotSDK + RobotSocketSDK + REST robot"s component control with Pyramid."""
+    """RobotSDK + RobotSocketSDK + REST robot's component control with Pyramid."""
 
     def __init__(self, config_path: str, socket_host: str, socket_port: int, ws_host: str, ws_port: int,
                  robot_speed: float = 1.0, motors_check_per_second: int = None, socket_send_per_second: int = None):
@@ -35,20 +35,20 @@ class RobotRESTSDK(RobotSocketSDK):
         Method to configure web services routes and views
         """
         with Configurator() as config:
-            config.add_route("hello_world", "/")
-            config.add_view(self.hello_world, route_name="hello_world")
-            config.add_route("robot_configuration", "/api/v1/robot/configuration/", request_method="GET")
-            config.add_view(self.robot_configuration, route_name="robot_configuration")
-            config.add_route("robot_status", "/api/v1/robot/status/", request_method="GET")
-            config.add_view(self.robot_status, route_name="robot_status")
-            config.add_route("robot_status_absolute", "/api/v1/robot/status/absolute/", request_method="GET")
-            config.add_view(self.robot_status_absolute, route_name="robot_status_absolute")
-            config.add_route("robot_motors", "/api/v1/robot/motors/", request_method="GET")
-            config.add_view(self.robot_motors, route_name="robot_motors")
-            config.add_route("robot_motor_detail_by_key", "/api/v1/robot/motors/{key}/", request_method="GET")
-            config.add_view(self.robot_motor_detail_by_key, route_name="robot_motor_detail_by_key")
-            config.add_route("robot_motor_patch_by_key", "/api/v1/robot/motors/{key}/", request_method="PATCH")
-            config.add_view(self.robot_motor_patch_by_key, route_name="robot_motor_patch_by_key")
+            config.add_route("ws_hello_world", "/")
+            config.add_view(self._ws_hello_world, route_name="ws_hello_world")
+            config.add_route("ws_robot_configuration", "/api/v1/robot/configuration/", request_method="GET")
+            config.add_view(self._ws_robot_configuration, route_name="ws_robot_configuration")
+            config.add_route("ws_robot_status", "/api/v1/robot/status/", request_method="GET")
+            config.add_view(self._ws_robot_status, route_name="ws_robot_status")
+            config.add_route("ws_robot_status_absolute", "/api/v1/robot/status/absolute/", request_method="GET")
+            config.add_view(self._ws_robot_status_absolute, route_name="ws_robot_status_absolute")
+            config.add_route("ws_robot_motors", "/api/v1/robot/motors/", request_method="GET")
+            config.add_view(self._ws_robot_motors, route_name="ws_robot_motors")
+            config.add_route("ws_robot_motor_detail_by_key", "/api/v1/robot/motors/{key}/", request_method="GET")
+            config.add_view(self._ws_robot_motor_detail_by_key, route_name="ws_robot_motor_detail_by_key")
+            config.add_route("ws_robot_motor_patch_by_key", "/api/v1/robot/motors/{key}/", request_method="PATCH")
+            config.add_view(self._ws_robot_motor_patch_by_key, route_name="ws_robot_motor_patch_by_key")
         app = config.make_wsgi_app()
         self._server = make_server(self._ws_host, self._ws_port, app)
 
@@ -69,32 +69,32 @@ class RobotRESTSDK(RobotSocketSDK):
             print("[ws_thread]: start serving on: http://{}:{}/".format(self._ws_host, self._ws_port))
         self._server.serve_forever()
 
-    def hello_world(self, root, request):
+    def _ws_hello_world(self, root, request):
         detail = "Hello World! These are web services for robot name: '{}'".format(self.configuration["name"])
         return Response(json_body={"detail": detail})
 
-    def robot_configuration(self, root, request):
+    def _ws_robot_configuration(self, root, request):
         return Response(json_body=self.configuration)
 
-    def robot_status(self, root, request):
+    def _ws_robot_status(self, root, request):
         return Response(json_body=self.get_robot_dict_status())
 
-    def robot_status_absolute(self, root, request):
+    def _ws_robot_status_absolute(self, root, request):
         return Response(json_body=self.get_robot_dict_status(absolute=True))
 
-    def robot_motors(self, root, request):
+    def _ws_robot_motors(self, root, request):
         motors = []
         for m in self.motors:
             motors.append(dict(m))
         return Response(json_body=motors)
 
-    def robot_motor_detail_by_key(self, root, request):
+    def _ws_robot_motor_detail_by_key(self, root, request):
         m = self.get_motor(request.matchdict["key"])
         if m is None:
             return Response(json_body={"detail": "Not found."}, status=404)
         return Response(json_body=dict(m))
 
-    def robot_motor_patch_by_key(self, root, request):
+    def _ws_robot_motor_patch_by_key(self, root, request):
         m = self.get_motor(request.matchdict["key"])
         if m is None:
             return Response(json_body={"detail": "Not found."}, status=404)
