@@ -9,7 +9,7 @@ SOCKET_PORT = 65432
 
 if __name__ == "__main__":
     print("Example2: Beginning test")
-    print("Run also 'example2_socket_receiver.py' to establish a socket communication to receive updates in real-time")
+    print("Run also 'example2_socket_client.py' to establish a socket communication to receive updates in real-time")
     robot = simplepybotsdk.RobotSocketSDK(
         config_path="example_webots_khr2hv.json",
         socket_host=SOCKET_HOST,

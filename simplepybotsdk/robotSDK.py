@@ -18,7 +18,7 @@ class RobotSDK:
         :param robot_speed: robot speed. Use this to make robot move slower or faster. Default is 1.
         :param motors_check_per_second: numbers of motor's check per second. Set to 0 to disable dedicated thread.
         """
-        logger.debug("RobotSDK initialization")
+        logger.debug("RobotSDK version {} initialization".format(configurations.VERSION))
         self.config_path = None
         self.configuration = None
         self.motors = []
@@ -162,7 +162,6 @@ class RobotSDK:
             "sensors": {},
             "format": "absolute" if absolute else "relative",
             "system": self.get_system_infos()
-
         }
         return dict_robot
 

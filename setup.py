@@ -2,9 +2,10 @@ from setuptools import setup
 
 setup(
     name='simplepybotsdk',
-    version='0.2.0',
+    version='0.3.beta1',
     packages=['simplepybotsdk'],
-    install_requires=['pyramid==1.10.5'],
+    install_requires=['pyramid==1.10.5', 'websockets==8.1'],
+    python_requires='>=3.5',
     url='https://github.com/vellons/SimplePYBotSDK',
     license='',
     author='Vellons',

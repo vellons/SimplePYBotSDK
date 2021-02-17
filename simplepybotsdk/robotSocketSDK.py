@@ -27,7 +27,7 @@ class RobotSocketSDK(RobotSDK):
         self._socket_host = socket_host
         self._socket_port = socket_port
         self._socket_send_per_second = socket_send_per_second
-        self._threaded_connection = []
+        self._socket_threaded_connection = []
         if self._socket_send_per_second is None:
             self._socket_send_per_second = configurations.SOCKET_SEND_PER_SECOND
         logger.debug("RobotSocketSDK initialization")
@@ -45,7 +45,7 @@ class RobotSocketSDK(RobotSDK):
             "[socket_thread]: start listening for connections on {}".format((self._socket_host, self._socket_port)))
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.bind((self._socket_host, self._socket_port))
-        self._socket.listen(5)
+        self._socket.listen(configurations.SOCKET_INCOMING_LIMIT - 1)
         print("[socket_thread]: listening for connections on {}".format((self._socket_host, self._socket_port)))
 
         while True:
@@ -53,7 +53,7 @@ class RobotSocketSDK(RobotSDK):
             thread = threading.Thread(target=self._socket_thread_connection_handler, args=(c, addr,))
             thread.daemon = True
             thread.start()
-            self._threaded_connection.append(thread)
+            self._socket_threaded_connection.append(thread)
 
     def _socket_thread_connection_handler(self, conn, addr):
         """
@@ -85,6 +85,7 @@ class RobotSocketSDK(RobotSDK):
             logger.info("[socket_thread]: connection with {} closed. {}".format(addr, e))
         finally:
             conn.close()
+        exit(0)
 
     @staticmethod
     def _socket_connect_return_json_if_received(conn, addr) -> (bool, dict):
@@ -98,6 +99,9 @@ class RobotSocketSDK(RobotSDK):
             if s == conn:
                 data = s.recv(8196).decode("utf-8")
                 if len(data) > 0:
+                    if data.startswith("GET"):
+                        logger.info("[socket_thread]: got HTTP/GET from: {}".format(addr))
+                        return True, {}
                     logger.info("[socket_thread]: got message from: {}: {}".format(addr, data))
                     try:
                         j = json.loads(data)
