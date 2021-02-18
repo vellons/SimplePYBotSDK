@@ -66,10 +66,12 @@ class RobotRESTSDK(RobotWebSocketSDK):
     def _rest_thread_handler(self):
         logger.debug("[rest_thread]: start serving on {}".format((self._rest_host, self._rest_port)))
         if self._rest_host == "0.0.0.0":
-            print("[rest_thread]: start serving on:\n\t- http://localhost:{}/\n\t- http://{}:{}/".format(
-                self._rest_port, socket.gethostbyname(socket.gethostname()), self._rest_port))
+            print("[rest_thread]: start serving on:\n\t- http://localhost:{}{}/\n\t- http://{}:{}{}/"
+                  .format(self._rest_port, self.rest_base_url,
+                          socket.gethostbyname(socket.gethostname()), self._rest_port, self.rest_base_url))
         else:
-            print("[rest_thread]: start serving on: http://{}:{}/".format(self._rest_host, self._rest_port))
+            print("[rest_thread]: start serving on: http://{}:{}{}/"
+                  .format(self._rest_host, self._rest_port, self.rest_base_url))
         self._server.serve_forever()
 
     def _rest_hello_world(self, root, request):
