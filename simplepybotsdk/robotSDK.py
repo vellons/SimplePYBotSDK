@@ -81,9 +81,9 @@ class RobotSDK:
                 if (time.time() - last_time) > ((1 / self._motors_check_per_second) / self.robot_speed):
                     last_time = time.time()
                     for m in self.motors:  # Watching all motors
-                        speed = self.configuration["motors_type"][m.motor_type]["angle_speed"]  # Get motor degree/sec
-                        max_step = speed / self._motors_check_per_second
-                        if m.abs_goal_angle != m.abs_current_angle:  # Check if is in goal position
+                        if m.abs_goal_angle != m.abs_current_angle:  # Check if is not in goal position
+                            speed = self.configuration["motors_type"][m.motor_type]["angle_speed"]  # Get degree/sec
+                            max_step = speed / self._motors_check_per_second  # Get max step for this iteration
                             step = m.abs_goal_angle - m.abs_current_angle
                             if step > max_step:
                                 step = max_step
