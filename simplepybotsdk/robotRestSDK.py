@@ -53,7 +53,8 @@ class RobotRESTSDK(RobotWebSocketSDK):
             config.add_view(self._rest_robot_motors, route_name="robot_motors")
             config.add_route("robot_motor_by_key", self.rest_base_url + "/motors/{key}/", request_method="GET")
             config.add_view(self._rest_robot_motor_detail_by_key, route_name="robot_motor_by_key")
-            config.add_route("robot_motor_patch_by_key", self.rest_base_url + "/motors/{key}/", request_method="PATCH")
+            config.add_route("robot_motor_patch_by_key", self.rest_base_url + "/motors/{key}/",
+                             request_method=["PATCH", "OPTIONS"])
             config.add_view(self._rest_robot_motor_patch_by_key, route_name="robot_motor_patch_by_key")
             if self.rest_enable_cors:
                 config.add_subscriber(add_cors_headers_response_callback, NewRequest)
@@ -105,6 +106,8 @@ class RobotRESTSDK(RobotWebSocketSDK):
         return Response(json_body=dict(m))
 
     def _rest_robot_motor_patch_by_key(self, root, request):
+        if request.method == "OPTIONS":
+            return Response(json_body={"detail": "ok"})
         m = self.get_motor(request.matchdict["key"])
         if m is None:
             return Response(json_body={"detail": "Not found."}, status=404)
@@ -113,7 +116,7 @@ class RobotRESTSDK(RobotWebSocketSDK):
             return Response(json_body=dict(m))
         except Exception as e:
             logger.error("[rest_thread]: robot_motor_patch_by_key: {}".format(e))
-            return Response(json_body={"detail": "Bad request. Use abs_goal_angle key"}, status=400)
+            return Response(json_body={"detail": "Bad request. Use goal_angle key"}, status=400)
 
 
 def add_cors_headers_response_callback(event):
@@ -121,9 +124,8 @@ def add_cors_headers_response_callback(event):
         response.headers.update({
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET,POST,PATCH,OPTIONS",
-            "Access-Control-Allow-Headers": "Origin, Content-Type, Accept, Authorization",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Max-Age": "1728000",
+            "Access-Control-Allow-Headers": "Origin, Content-Type, Accept",
+            "Access-Control-Max-Age": "600",
             "SimplePYBotSDK": configurations.VERSION
         })
 
