@@ -3,7 +3,9 @@ import threading
 import socket
 from pyramid.config import Configurator
 from pyramid.response import Response
+from pyramid.events import NewRequest
 from wsgiref.simple_server import make_server
+import simplepybotsdk.configurations as configurations
 from simplepybotsdk.robotWebSocketSDK import RobotWebSocketSDK as RobotWebSocketSDK
 
 logger = logging.getLogger(__name__)
@@ -28,6 +30,7 @@ class RobotRESTSDK(RobotWebSocketSDK):
                          socket_send_per_second)
         logger.debug("RobotRESTSDK initialization")
         self.rest_base_url = "/api/v1/robot"
+        self.rest_enable_cors = True
         self._rest_host = rest_host
         self._rest_port = rest_port
         self._thread_rest = None
@@ -52,6 +55,8 @@ class RobotRESTSDK(RobotWebSocketSDK):
             config.add_view(self._rest_robot_motor_detail_by_key, route_name="robot_motor_by_key")
             config.add_route("robot_motor_patch_by_key", self.rest_base_url + "/motors/{key}/", request_method="PATCH")
             config.add_view(self._rest_robot_motor_patch_by_key, route_name="robot_motor_patch_by_key")
+            if self.rest_enable_cors:
+                config.add_subscriber(add_cors_headers_response_callback, NewRequest)
         app = config.make_wsgi_app()
         self._server = make_server(self._rest_host, self._rest_port, app)
 
@@ -109,3 +114,17 @@ class RobotRESTSDK(RobotWebSocketSDK):
         except Exception as e:
             logger.error("[rest_thread]: robot_motor_patch_by_key: {}".format(e))
             return Response(json_body={"detail": "Bad request. Use abs_goal_angle key"}, status=400)
+
+
+def add_cors_headers_response_callback(event):
+    def cors_headers(request, response):
+        response.headers.update({
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,POST,PATCH,OPTIONS",
+            "Access-Control-Allow-Headers": "Origin, Content-Type, Accept, Authorization",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "1728000",
+            "SimplePYBotSDK": configurations.VERSION
+        })
+
+    event.request.add_response_callback(cors_headers)
