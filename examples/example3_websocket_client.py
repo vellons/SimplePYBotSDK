@@ -12,7 +12,7 @@ async def hello():
 
     while True:
         message = await websocket.recv()
-        print("{}".format(message))
+        print(message)
 
 
 if __name__ == "__main__":
