@@ -72,11 +72,11 @@ class RobotRESTSDK(RobotWebSocketSDK):
     def _rest_thread_handler(self):
         logger.debug("[rest_thread]: start serving on {}".format((self._rest_host, self._rest_port)))
         if self._rest_host == "0.0.0.0":
-            print("[rest_thread]: start serving on:\n\t- http://localhost:{}{}/\n\t- http://{}:{}{}/"
+            print("[rest_thread]: start serving at:\n\t- Local:   http://localhost:{}{}/\n\t- Network: http://{}:{}{}/"
                   .format(self._rest_port, self.rest_base_url,
                           socket.gethostbyname(socket.gethostname()), self._rest_port, self.rest_base_url))
         else:
-            print("[rest_thread]: start serving on: http://{}:{}{}/"
+            print("[rest_thread]: start serving at: http://{}:{}{}/"
                   .format(self._rest_host, self._rest_port, self.rest_base_url))
         self._server.serve_forever()
 

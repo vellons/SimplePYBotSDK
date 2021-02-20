@@ -66,7 +66,7 @@ class Motor:
         :return: relative angle
         """
         if self.orientation == 1:
-            return angle + self.offset
+            return - angle - self.offset
         else:
             return angle - self.offset
 
@@ -76,7 +76,7 @@ class Motor:
         :return: absolute angle
         """
         if self.orientation == 1:
-            return angle - self.offset
+            return - angle + self.offset
         else:
             return angle + self.offset
 
