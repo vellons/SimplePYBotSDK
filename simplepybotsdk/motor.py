@@ -23,12 +23,13 @@ class Motor:
         self.offset = offset
         self.angle_limit = angle_limit
         self.orientation = 1 if orientation == "indirect" else 0
-        self.instant_mode = instant_mode
         self.motor_type = motor_type
         self.abs_goal_angle = 0.0
         self.abs_current_angle = 0.0
         logger.debug("{}: initialization".format(self.key))
+        self.instant_mode = True
         self.set_goal_angle(0)
+        self.instant_mode = instant_mode
 
     def get_goal_angle(self) -> float:
         """

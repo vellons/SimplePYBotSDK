@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='simplepybotsdk',
-    version='0.3.beta2',
+    version='0.3.beta3',
     packages=['simplepybotsdk'],
     install_requires=['pyramid==1.10.5', 'websockets==8.1'],
     python_requires='>=3.5',
