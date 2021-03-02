@@ -1,6 +1,5 @@
 import logging
 import threading
-import socket
 from pyramid.config import Configurator
 from pyramid.response import Response
 from pyramid.events import NewRequest
@@ -65,7 +64,7 @@ class RobotRESTSDK(RobotWebSocketSDK):
         """
         Method to start web services thread.
         """
-        self._thread_rest = threading.Thread(target=self._rest_thread_handler, args=())
+        self._thread_rest = threading.Thread(name="rest_thread", target=self._rest_thread_handler, args=())
         self._thread_rest.daemon = True
         self._thread_rest.start()
 
@@ -73,8 +72,7 @@ class RobotRESTSDK(RobotWebSocketSDK):
         logger.debug("[rest_thread]: start serving on {}".format((self._rest_host, self._rest_port)))
         if self._rest_host == "0.0.0.0":
             print("[rest_thread]: start serving at:\n\t- Local:   http://localhost:{}{}/\n\t- Network: http://{}:{}{}/"
-                  .format(self._rest_port, self.rest_base_url,
-                          socket.gethostbyname(socket.gethostname()), self._rest_port, self.rest_base_url))
+                  .format(self._rest_port, self.rest_base_url, get_my_ip(), self._rest_port, self.rest_base_url))
         else:
             print("[rest_thread]: start serving at: http://{}:{}{}/"
                   .format(self._rest_host, self._rest_port, self.rest_base_url))
@@ -107,7 +105,7 @@ class RobotRESTSDK(RobotWebSocketSDK):
 
     def _rest_robot_motor_patch_by_key(self, root, request):
         if request.method == "OPTIONS":
-            return Response(json_body={"detail": "ok"})
+            return Response(json_body={})
         m = self.get_motor(request.matchdict["key"])
         if m is None:
             return Response(json_body={"detail": "Not found."}, status=404)
@@ -130,3 +128,15 @@ def add_cors_headers_response_callback(event):
         })
 
     event.request.add_response_callback(cors_headers)
+
+
+def get_my_ip():
+    try:
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("1.1.1.1", 80))
+        my_ip = s.getsockname()[0]
+        s.close()
+        return my_ip
+    except:
+        return "localhost"

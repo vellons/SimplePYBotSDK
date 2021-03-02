@@ -32,7 +32,7 @@ class RobotSocketSDK(RobotSDK):
             self._socket_send_per_second = configurations.SOCKET_SEND_PER_SECOND
         logger.debug("RobotSocketSDK initialization")
 
-        self._thread_socket = threading.Thread(target=self._socket_thread_handler, args=())
+        self._thread_socket = threading.Thread(name="socket_thread", target=self._socket_thread_handler, args=())
         self._thread_socket.daemon = True
         self._thread_socket.start()
 
@@ -51,6 +51,7 @@ class RobotSocketSDK(RobotSDK):
         while True:
             c, addr = self._socket.accept()
             thread = threading.Thread(target=self._socket_thread_connection_handler, args=(c, addr,))
+            thread.name = "socket_thread_client_handler_{}".format(addr[1])
             thread.daemon = True
             thread.start()
             self._socket_threaded_connection.append(thread)
@@ -62,8 +63,9 @@ class RobotSocketSDK(RobotSDK):
         :param conn: socket connection instance.
         :param addr: tuple with ip and socket of the client connected.
         """
+        thread_name = threading.current_thread().name
         try:
-            logger.info("[socket_thread]: got connection from: {}".format(addr))
+            logger.info("[{}]: got connection from: {}".format(thread_name, addr))
             last_time = time.time()
             absolute = False
             while True:
@@ -74,18 +76,17 @@ class RobotSocketSDK(RobotSDK):
                         if "socket" in message and "format" in message["socket"]:
                             f = message["socket"]["format"]
                             if f == "absolute":
-                                logger.debug("[socket_thread]: connection: {} now use format: {}".format(addr, f))
+                                logger.debug("[{}]: connection: {} now use format: {}".format(thread_name, addr, f))
                                 absolute = True
                             if f == "relative":
-                                logger.debug("[socket_thread]: connection: {} now use format: {}".format(addr, f))
+                                logger.debug("[{}]: connection: {} now use format: {}".format(thread_name, addr, f))
                                 absolute = False
                         self.socket_recv_callback(message, addr)
                     conn.send(json.dumps(self.get_robot_dict_status(absolute=absolute)).encode("utf-8"))
         except Exception as e:
-            logger.info("[socket_thread]: connection with {} closed. {}".format(addr, e))
+            logger.info("[{}]: connection with {} closed. {}".format(thread_name, addr, e))
         finally:
             conn.close()
-        exit(0)
 
     @staticmethod
     def _socket_connect_return_json_if_received(conn, addr) -> (bool, dict):
@@ -94,21 +95,22 @@ class RobotSocketSDK(RobotSDK):
         :param conn: socket connection instance.
         :param addr: tuple with ip and socket of the client connected.
         """
+        thread_name = threading.current_thread().name
         read_sockets, _, _ = select([conn], [], [], 0)
         for s in read_sockets:
             if s == conn:
                 data = s.recv(8196).decode("utf-8")
                 if len(data) > 0:
                     if data.startswith("GET"):
-                        logger.info("[socket_thread]: got HTTP/GET from: {}".format(addr))
+                        logger.debug("[{}]: got HTTP/GET from: {}".format(thread_name, addr))
                         return True, {}
-                    logger.info("[socket_thread]: got message from: {}: {}".format(addr, data))
+                    logger.debug("[{}]: got message from: {}: {}".format(thread_name, addr, data))
                     try:
                         j = json.loads(data)
                         return True, j
                     except Exception as e:
-                        print(e)
-                        logger.error("[socket_thread]: fail to decode message from: {}: {}. {}".format(addr, data, e))
+                        logger.error("[{}]: fail to decode message from: {}: {}. {}".format(thread_name, addr, data, e))
+                        print("[{}]: fail to decode message from: {}: {}. {}".format(thread_name, addr, data, e))
         return False, None
 
     def socket_recv_callback(self, message, addr):

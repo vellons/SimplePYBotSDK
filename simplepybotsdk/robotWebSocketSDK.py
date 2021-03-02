@@ -97,7 +97,6 @@ class RobotWebSocketSDK(RobotSDK):
         except Exception as e:
             ip = websocket.remote_address[0]
             logger.info("[websocket_thread]: connection with {} closed with error. {}".format(ip, e))
-        exit(0)
 
     # def _web_socket_thread_sender(self):
     #     """

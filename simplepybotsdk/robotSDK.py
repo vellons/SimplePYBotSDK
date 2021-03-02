@@ -18,7 +18,7 @@ class RobotSDK:
         :param robot_speed: robot speed. Use this to make robot move slower or faster. Default is 1.
         :param motors_check_per_second: numbers of motor's check per second. Set to 0 to disable dedicated thread.
         """
-        logger.debug("RobotSDK version {} initialization".format(configurations.VERSION))
+        logger.info("RobotSDK version {} initialization".format(configurations.VERSION))
         self.config_path = None
         self.configuration = None
         self.motors = []
@@ -42,7 +42,8 @@ class RobotSDK:
             with open(self.config_path) as f:
                 self.configuration = json.load(f)
         except Exception as e:
-            logger.error(e)
+            logger.error("Initialization configuration error: exception: {}".format(e))
+            print("Initialization configuration error: exception: {}".format(e))
             exit(-1)
 
         logger.debug("Robot configuration: {}".format(self.configuration))
@@ -62,11 +63,11 @@ class RobotSDK:
             ))
         logger.debug("Motors initialization completed. Total motors: {} {}".format(len(self.motors), self.motors))
         if self._motors_check_per_second > 0:
-            self._thread_motors = threading.Thread(target=self._motors_thread_handler, args=())
+            self._thread_motors = threading.Thread(name="motors_thread", target=self._motors_thread_handler, args=())
             self._thread_motors.daemon = True
             self._thread_motors.start()
         else:
-            logger.debug("[motors_thread]: thread to control motors disabled")
+            logger.debug("[motors_thread]: thread to control motors disabled by motors_check_per_second parameter")
 
     def _motors_thread_handler(self):
         """
@@ -96,8 +97,8 @@ class RobotSDK:
                                                                                                  step))
                             m.abs_current_angle = m.abs_current_angle + step
             except Exception as e:
-                print("[motors_thread]: exception: {}".format(e))
                 logger.error("[motors_thread]: exception: {}".format(e))
+                print("[motors_thread]: exception: {}".format(e))
                 pass
 
     def get_motor(self, key: str) -> Motor:
