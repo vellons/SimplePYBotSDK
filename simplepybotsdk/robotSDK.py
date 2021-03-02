@@ -35,6 +35,7 @@ class RobotSDK:
         """
         Read the JSON file configuration from path.
         Then starts robot's component initialization.
+        :param config_path: SimplePYBotSDK json configuration file path.
         """
         logger.debug("Initialization with file: {}".format(config_path))
         self.config_path = config_path
@@ -77,13 +78,14 @@ class RobotSDK:
         logger.debug("[motors_thread]: start handling {} motors".format(len(self.motors)))
         print("[motors_thread]: start handling {} motors".format(len(self.motors)))
         last_time = time.time()
+        motors_conf = self.configuration["motors_type"]
         while True:
-            try:
-                if (time.time() - last_time) > ((1 / self._motors_check_per_second) / self.robot_speed):
-                    last_time = time.time()
+            if (time.time() - last_time) > ((1 / self._motors_check_per_second) / self.robot_speed):
+                last_time = time.time()
+                try:
                     for m in self.motors:  # Watching all motors
                         if m.abs_goal_angle != m.abs_current_angle:  # Check if is not in goal position
-                            speed = self.configuration["motors_type"][m.motor_type]["angle_speed"]  # Get degree/sec
+                            speed = motors_conf[m.motor_type]["angle_speed"]  # Get degree/sec
                             max_step = speed / self._motors_check_per_second  # Get max step for this iteration
                             step = m.abs_goal_angle - m.abs_current_angle
                             if step > max_step:
@@ -96,10 +98,10 @@ class RobotSDK:
                                                                                                  m.abs_goal_angle,
                                                                                                  step))
                             m.abs_current_angle = m.abs_current_angle + step
-            except Exception as e:
-                logger.error("[motors_thread]: exception: {}".format(e))
-                print("[motors_thread]: exception: {}".format(e))
-                pass
+                except Exception as e:
+                    logger.error("[motors_thread]: exception: {}".format(e))
+                    print("[motors_thread]: exception: {}".format(e))
+                    pass
 
     def get_motor(self, key: str) -> Motor:
         """

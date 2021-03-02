@@ -1,4 +1,5 @@
 import logging
+from time import sleep
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,12 @@ class Motor:
         self.set_goal_angle(0)
         self.instant_mode = instant_mode
 
+    def get_current_angle(self) -> float:
+        """
+        :return: relative current angle position of the motor.
+        """
+        return self.to_relative_angle(self.abs_current_angle)
+
     def get_goal_angle(self) -> float:
         """
         :return: relative goal angle position for the motor.
@@ -59,6 +66,17 @@ class Motor:
                                                                                   self.abs_goal_angle))
         if self.instant_mode is True:
             self.abs_current_angle = self.abs_goal_angle
+        return self.get_goal_angle()
+
+    def go_to_goal_angle(self, angle: float) -> float:
+        """
+        set_goal_angle() but wait until the motor is in the goal position.
+        :param angle: new relative goal angle position to set.
+        :return: the new relative goal position.
+        """
+        self.set_goal_angle(angle)
+        while self.get_current_angle() != angle:
+            sleep(0.0166)
         return self.get_goal_angle()
 
     def to_relative_angle(self, angle: float) -> float:
