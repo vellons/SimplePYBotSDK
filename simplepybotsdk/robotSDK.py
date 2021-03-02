@@ -147,6 +147,15 @@ class RobotSDK:
             })
         return motors
 
+    def get_sdk_infos(self) -> dict:
+        """
+        :return: dict of sdk infos.
+        """
+        return {
+            "robot_speed": self.robot_speed,
+            "motors_check_per_second": self._motors_check_per_second
+        }
+
     @staticmethod
     def get_system_infos() -> dict:
         """
@@ -164,6 +173,7 @@ class RobotSDK:
             "motors": self.get_motors_list_abs_angles() if absolute else self.get_motors_list_relative_angles(),
             "sensors": {},
             "format": "absolute" if absolute else "relative",
+            "sdk": self.get_sdk_infos(),
             "system": self.get_system_infos()
         }
         return dict_robot

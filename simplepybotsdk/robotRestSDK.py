@@ -48,6 +48,10 @@ class RobotRESTSDK(RobotWebSocketSDK):
             config.add_view(self._rest_robot_status, route_name="robot_status")
             config.add_route("robot_status_abs", self.rest_base_url + "/status/absolute/", request_method="GET")
             config.add_view(self._rest_robot_status_absolute, route_name="robot_status_abs")
+            config.add_route("robot_sdk_info", self.rest_base_url + "/sdk/", request_method="GET")
+            config.add_view(self._rest_robot_sdk_info, route_name="robot_sdk_info")
+            config.add_route("robot_sdk_patch", self.rest_base_url + "/sdk/", request_method=["PATCH", "OPTIONS"])
+            config.add_view(self._rest_robot_sdk_patch, route_name="robot_sdk_patch")
             config.add_route("robot_motors", self.rest_base_url + "/motors/", request_method="GET")
             config.add_view(self._rest_robot_motors, route_name="robot_motors")
             config.add_route("robot_motor_by_key", self.rest_base_url + "/motors/{key}/", request_method="GET")
@@ -78,6 +82,20 @@ class RobotRESTSDK(RobotWebSocketSDK):
                   .format(self._rest_host, self._rest_port, self.rest_base_url))
         self._server.serve_forever()
 
+    def get_sdk_infos(self) -> dict:
+        """
+        :return: dict of sdk infos.
+        """
+        return {
+            "robot_speed": self.robot_speed,
+            "motors_check_per_second": self._motors_check_per_second,
+            "robot_ip": get_my_ip(),
+            "rest_base_url": self.rest_base_url,
+            "rest_enable_cors": self.rest_enable_cors,
+            "socket_port": self._web_socket_port,
+            "socket_send_per_second": self._web_socket_send_per_second
+        }
+
     def _rest_hello_world(self, root, request):
         detail = "Hello World! These are web services for robot name: '{}'".format(self.configuration["name"])
         return Response(json_body={"detail": detail})
@@ -90,6 +108,19 @@ class RobotRESTSDK(RobotWebSocketSDK):
 
     def _rest_robot_status_absolute(self, root, request):
         return Response(json_body=self.get_robot_dict_status(absolute=True))
+
+    def _rest_robot_sdk_info(self, root, request):
+        return Response(json_body=self.get_sdk_infos())
+
+    def _rest_robot_sdk_patch(self, root, request):
+        if request.method == "OPTIONS":
+            return Response(json_body={})
+        try:
+            self.robot_speed = round(request.json_body["robot_speed"], 2)
+            return Response(json_body=self.get_sdk_infos())
+        except Exception as e:
+            logger.error("[rest_thread]: robot_sdk_patch: {}".format(e))
+            return Response(json_body={"detail": "Bad request. Use robot_speed field"}, status=400)
 
     def _rest_robot_motors(self, root, request):
         motors = []
