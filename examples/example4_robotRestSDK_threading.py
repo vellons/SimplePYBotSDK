@@ -4,8 +4,7 @@ import threading
 
 import simplepybotsdk
 
-logging.basicConfig(level=logging.DEBUG, filename='log.log',
-                    format='%(asctime)s %(levelname)s %(name)s %(thread)d: %(message)s')
+logging.basicConfig(level=logging.DEBUG, filename='log.log', format='%(asctime)s %(levelname)s %(name)s: %(message)s')
 logging.getLogger('websockets.protocol').setLevel(logging.ERROR)
 logging.getLogger('asyncio').setLevel(logging.ERROR)
 logging.getLogger('asyncio.coroutines').setLevel(logging.ERROR)
