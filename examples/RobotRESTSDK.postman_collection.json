@@ -11,14 +11,11 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server}}/api/v1/robot/",
+					"raw": "{{server}}/",
 					"host": [
 						"{{server}}"
 					],
 					"path": [
-						"api",
-						"v1",
-						"robot",
 						""
 					]
 				}
@@ -26,19 +23,16 @@
 			"response": []
 		},
 		{
-			"name": "robot/configuration/",
+			"name": "configuration/",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server}}/api/v1/robot/configuration/",
+					"raw": "{{server}}/configuration/",
 					"host": [
 						"{{server}}"
 					],
 					"path": [
-						"api",
-						"v1",
-						"robot",
 						"configuration",
 						""
 					]
@@ -47,19 +41,16 @@
 			"response": []
 		},
 		{
-			"name": "robot/status/",
+			"name": "status/",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server}}/api/v1/robot/status/",
+					"raw": "{{server}}/status/",
 					"host": [
 						"{{server}}"
 					],
 					"path": [
-						"api",
-						"v1",
-						"robot",
 						"status",
 						""
 					]
@@ -68,19 +59,16 @@
 			"response": []
 		},
 		{
-			"name": "robot/status/absolute/",
+			"name": "status/absolute/",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server}}/api/v1/robot/status/absolute/",
+					"raw": "{{server}}/status/absolute/",
 					"host": [
 						"{{server}}"
 					],
 					"path": [
-						"api",
-						"v1",
-						"robot",
 						"status",
 						"absolute",
 						""
@@ -90,19 +78,61 @@
 			"response": []
 		},
 		{
-			"name": "robot/motors/",
+			"name": "sdk/",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server}}/api/v1/robot/motors/",
+					"raw": "{{server}}/sdk/",
 					"host": [
 						"{{server}}"
 					],
 					"path": [
-						"api",
-						"v1",
-						"robot",
+						"sdk",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "sdk/",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"robot_speed\": 2\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{server}}/sdk/",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"sdk",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "motors/",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/motors/",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
 						"motors",
 						""
 					]
@@ -111,19 +141,16 @@
 			"response": []
 		},
 		{
-			"name": "robot/motors/{key}/",
+			"name": "motors/{key}/",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{server}}/api/v1/robot/motors/head_z/",
+					"raw": "{{server}}/motors/head_z/",
 					"host": [
 						"{{server}}"
 					],
 					"path": [
-						"api",
-						"v1",
-						"robot",
 						"motors",
 						"head_z",
 						""
@@ -133,13 +160,13 @@
 			"response": []
 		},
 		{
-			"name": "robot/motors/{key}/",
+			"name": "motors/{key}/",
 			"request": {
 				"method": "PATCH",
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"goal_angle\": 50}",
+					"raw": "{\r\n    \"goal_angle\": 50\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -147,14 +174,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{server}}/api/v1/robot/motors/head_z/",
+					"raw": "{{server}}/motors/head_z/",
 					"host": [
 						"{{server}}"
 					],
 					"path": [
-						"api",
-						"v1",
-						"robot",
 						"motors",
 						"head_z",
 						""
@@ -187,7 +211,7 @@
 	"variable": [
 		{
 			"key": "server",
-			"value": "http://127.0.0.1:8000"
+			"value": "http://localhost:8000/api/v1/robot"
 		}
 	]
 }
