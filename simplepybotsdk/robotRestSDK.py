@@ -96,20 +96,20 @@ class RobotRESTSDK(RobotWebSocketSDK):
             "socket_send_per_second": self._web_socket_send_per_second
         }
 
-    def _rest_hello_world(self, root, request):
+    def _rest_hello_world(self):
         detail = "Hello World! These are web services for robot name: '{}'".format(self.configuration["name"])
         return Response(json_body={"detail": detail})
 
-    def _rest_robot_configuration(self, root, request):
+    def _rest_robot_configuration(self):
         return Response(json_body=self.configuration)
 
-    def _rest_robot_status(self, root, request):
+    def _rest_robot_status(self):
         return Response(json_body=self.get_robot_dict_status())
 
-    def _rest_robot_status_absolute(self, root, request):
+    def _rest_robot_status_absolute(self):
         return Response(json_body=self.get_robot_dict_status(absolute=True))
 
-    def _rest_robot_sdk_info(self, root, request):
+    def _rest_robot_sdk_info(self):
         return Response(json_body=self.get_sdk_infos())
 
     def _rest_robot_sdk_patch(self, root, request):
@@ -122,7 +122,7 @@ class RobotRESTSDK(RobotWebSocketSDK):
             logger.error("[rest_thread]: robot_sdk_patch: {}".format(e))
             return Response(json_body={"detail": "Bad request. Use robot_speed field"}, status=400)
 
-    def _rest_robot_motors(self, root, request):
+    def _rest_robot_motors(self):
         motors = []
         for m in self.motors:
             motors.append(dict(m))
