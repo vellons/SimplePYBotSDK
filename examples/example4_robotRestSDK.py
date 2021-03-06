@@ -8,7 +8,6 @@ logging.getLogger('asyncio').setLevel(logging.ERROR)
 logging.getLogger('asyncio.coroutines').setLevel(logging.ERROR)
 logging.getLogger('websockets.server').setLevel(logging.ERROR)
 
-
 SOCKET_HOST = "localhost"  # Use "0.0.0.0" for external connection
 SOCKET_PORT = 65432
 REST_HOST = "localhost"  # Use "0.0.0.0" for external connection
@@ -27,13 +26,14 @@ if __name__ == "__main__":
     )
     robot.rest_configure()
     robot.rest_serve_forever()
-    mot = robot.get_motor("head_z")  # Get motor
 
     sleep(10)
-    robot.robot_speed = 0.1  # Make robot's motors move 10x slower
-    print("Start position:", mot.get_goal_angle())
-    mot.set_goal_angle(34.7)
-    print("End position:", mot.get_goal_angle())
+    robot.robot_speed = 1  # Make robot's motors move 10x slower
+    print("goto t")
+    robot.go_to_pose("t")
+    sleep(7)
+    print("goto standby")
+    robot.go_to_pose("standby", 10, blocking=True)
 
     print("Example4: end")
     while True:

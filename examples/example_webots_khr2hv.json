@@ -53,7 +53,7 @@
       ],
       "orientation": "indirect"
     },
-	"l_elbow_y": {
+    "l_elbow_y": {
       "id": "Left_Hand",
       "offset": 0.0,
       "type": "virtual-servo",
@@ -77,6 +77,26 @@
   "motors_type": {
     "virtual-servo": {
       "angle_speed": 60
+    }
+  },
+  "poses": {
+    "standby": {
+      "head_z": 0,
+      "l_shoulder_x": 0,
+      "r_shoulder_x": 0,
+      "l_shoulder_y": 0,
+      "r_shoulder_y": 0,
+      "l_elbow_y": 0,
+      "r_elbow_y": 0
+    },
+    "t": {
+      "head_z": 0,
+      "l_shoulder_x": -90,
+      "r_shoulder_x": -90,
+      "l_shoulder_y": 90,
+      "r_shoulder_y": 90,
+      "l_elbow_y": 0,
+      "r_elbow_y": 0
     }
   }
 }

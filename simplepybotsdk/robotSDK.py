@@ -124,27 +124,48 @@ class RobotSDK:
         found = [m for m in self.motors if m.id == identifier]
         return found[0] if len(found) == 1 else None
 
-    def move_point_to_point(self, motors_goal_list: list, seconds: float, blocking: bool = False):
+    def go_to_pose(self, pose_name: str, seconds: float = 0, blocking: bool = False):
         """
-        Method to move several motors simultaneously towards the goal angle position.
-        This method calc the future positions of the motors and then use _exec_point_to_point().
-        :param motors_goal_list: list of {"key": key, "goal_angle": angle}.
+        Method to move the robot in a specific pose defined in the configuration file.
+        :param pose_name: name of the pose.
         :param seconds: duration in seconds of the simultaneous movement.
         :param blocking: if False start a dedicated thread to handle the movements.
         """
-        logger.info("move_point_to_point: {} in {} sec".format(motors_goal_list, seconds))
+        if "poses" in self.configuration:
+            if pose_name in self.configuration["poses"]:
+                pose = self.configuration["poses"][pose_name]
+                logger.debug("go_to_pose: {}".format(pose_name))
+                if seconds == 0:
+                    blocking = True  # avoid starting the thread
+                self.move_point_to_point(pose, seconds, blocking)
+                return True
+            else:
+                logger.warning("go_to_pose: pose '{}' not found".format(pose_name))
+        else:
+            logger.warning("go_to_pose: no poses found in current configuration")
+        return False
+
+    def move_point_to_point(self, motors_goal: dict, seconds: float, blocking: bool = False):
+        """
+        Method to move several motors simultaneously towards the goal angle position.
+        This method calc the future positions of the motors and then use _exec_point_to_point().
+        :param motors_goal: dict of {"key": goal_angle, "key": goal_angle}.
+        :param seconds: duration in seconds of the simultaneous movement.
+        :param blocking: if False start a dedicated thread to handle the movements.
+        """
+        logger.info("move_point_to_point: {} in {} sec".format(motors_goal, seconds))
         point_to_point = []
-        for item in motors_goal_list:
-            m = self.get_motor(item["key"])
+        for item in motors_goal:
+            m = self.get_motor(item)
             if m is None:
                 logger.warning("move_point_to_point: motor with key '{}' not found".format(item["key"]))
                 continue
 
-            goal = item["goal_angle"]
+            goal = motors_goal[item]
             current = m.get_goal_angle()
             difference = goal - current
             point_to_point.append({
-                "key": item["key"],
+                "key": item,
                 "start": current,
                 "step": difference / ((seconds * self._motors_point_to_point_check_per_second) if seconds != 0 else 1)
             })

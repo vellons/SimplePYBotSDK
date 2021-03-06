@@ -31,34 +31,34 @@ if __name__ == "__main__":
     time.sleep(5)
 
     print("Start moving")
-    robot.move_point_to_point([{"key": "head_z", "goal_angle": -25}], 3, blocking=True)
-    robot.move_point_to_point([{"key": "head_z", "goal_angle": 0}], 4)
+    robot.move_point_to_point({"head_z": -25}, 3, blocking=True)
+    robot.move_point_to_point({"head_z": 0}, 4)
 
-    ptp0 = [
-        {"key": "l_shoulder_x", "goal_angle": -90},
-        {"key": "r_shoulder_x", "goal_angle": -90},
-        {"key": "l_shoulder_y", "goal_angle": 90},
-        {"key": "r_shoulder_y", "goal_angle": 90},
-        {"key": "l_elbow_y", "goal_angle": 0},
-        {"key": "r_elbow_y", "goal_angle": 0}
-    ]
+    ptp0 = {
+        "l_shoulder_x": -90,
+        "r_shoulder_x": -90,
+        "l_shoulder_y": 90,
+        "r_shoulder_y": 90,
+        "l_elbow_y": 0,
+        "r_elbow_y": 0
+    }
     robot.move_point_to_point(ptp0, 8, blocking=True)
 
-    ptp1 = [
-        {"key": "head_z", "goal_angle": 45},
-        {"key": "l_shoulder_y", "goal_angle": 90},
-        {"key": "r_shoulder_y", "goal_angle": 135},
-        {"key": "l_elbow_y", "goal_angle": 0},
-        {"key": "r_elbow_y", "goal_angle": 110}
-    ]
+    ptp1 = {
+        "head_z": 45,
+        "l_shoulder_y": 90,
+        "r_shoulder_y": 135,
+        "l_elbow_y": 0,
+        "r_elbow_y": 110
+    }
 
-    ptp2 = [
-        {"key": "head_z", "goal_angle": -45},
-        {"key": "l_shoulder_y", "goal_angle": 135},
-        {"key": "r_shoulder_y", "goal_angle": 90},
-        {"key": "l_elbow_y", "goal_angle": 110},
-        {"key": "r_elbow_y", "goal_angle": 0}
-    ]
+    ptp2 = {
+        "head_z": -45,
+        "l_shoulder_y": 135,
+        "r_shoulder_y": 90,
+        "l_elbow_y": 110,
+        "r_elbow_y": 0
+    }
 
     print("Start loop")
     while True:
