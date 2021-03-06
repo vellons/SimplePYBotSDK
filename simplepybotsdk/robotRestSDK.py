@@ -14,7 +14,8 @@ class RobotRESTSDK(RobotWebSocketSDK):
     """RobotSDK + RobotWebSocketSDK + REST robot's component control with Pyramid."""
 
     def __init__(self, config_path: str, socket_host: str, socket_port: int, rest_host: str, rest_port: int,
-                 robot_speed: float = 1.0, motors_check_per_second: int = None, socket_send_per_second: int = None):
+                 robot_speed: float = 1.0, motors_check_per_second: int = None,
+                 motors_point_to_point_check_per_second: int = None, socket_send_per_second: int = None):
         """
         :param config_path: SimplePYBotSDK json configuration file path.
         :param socket_host: socket host to listen.
@@ -23,10 +24,11 @@ class RobotRESTSDK(RobotWebSocketSDK):
         :param rest_port: web server port to listen.
         :param robot_speed: robot speed. Use this to make robot move slower or faster. Default is 1.
         :param motors_check_per_second: numbers of motor's check per second. Set to 0 to disable dedicated thread.
+        :param motors_point_to_point_check_per_second: numbers of motor's movement in a second during point to point.
         :param socket_send_per_second: numbers of dump send to the socket client in 1 second.
         """
         super().__init__(config_path, socket_host, socket_port, robot_speed, motors_check_per_second,
-                         socket_send_per_second)
+                         motors_point_to_point_check_per_second, socket_send_per_second)
         logger.debug("RobotRESTSDK initialization")
         self.rest_base_url = "/api/v1/robot"
         self.rest_enable_cors = True

@@ -14,16 +14,18 @@ class RobotSocketSDK(RobotSDK):
     """RobotSDK + Socket layer for read only current state of robot's component."""
 
     def __init__(self, config_path: str, socket_host: str, socket_port: int, robot_speed: float = 1.0,
-                 motors_check_per_second: int = None, socket_send_per_second: int = None):
+                 motors_check_per_second: int = None, motors_point_to_point_check_per_second: int = None,
+                 socket_send_per_second: int = None):
         """
         :param config_path: SimplePYBotSDK json configuration file path.
         :param socket_host: socket host to listen.
         :param socket_port: socket port to listen.
         :param robot_speed: robot speed. Use this to make robot move slower or faster. Default is 1.
         :param motors_check_per_second: numbers of motor's check per second. Set to 0 to disable dedicated thread.
+        :param motors_point_to_point_check_per_second: numbers of motor's movement in a second during point to point.
         :param socket_send_per_second: numbers of dump send to the socket client in 1 second.
         """
-        super().__init__(config_path, robot_speed, motors_check_per_second)
+        super().__init__(config_path, robot_speed, motors_check_per_second, motors_point_to_point_check_per_second)
         self._socket_host = socket_host
         self._socket_port = socket_port
         self._socket_send_per_second = socket_send_per_second

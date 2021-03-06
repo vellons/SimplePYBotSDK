@@ -12,11 +12,13 @@ logger = logging.getLogger(__name__)
 class RobotSDK:
     """Base RobotSDK class."""
 
-    def __init__(self, config_path: str, robot_speed: float = 1.0, motors_check_per_second: int = None):
+    def __init__(self, config_path: str, robot_speed: float = 1.0, motors_check_per_second: int = None,
+                 motors_point_to_point_check_per_second: int = None):
         """
         :param config_path: SimplePYBotSDK json configuration file path.
         :param robot_speed: robot speed. Use this to make robot move slower or faster. Default is 1.
         :param motors_check_per_second: numbers of motor's check per second. Set to 0 to disable dedicated thread.
+        :param motors_point_to_point_check_per_second: numbers of motor's movement in a second during point to point.
         """
         logger.info("RobotSDK version {} initialization".format(configurations.VERSION))
         self.config_path = None
@@ -24,10 +26,13 @@ class RobotSDK:
         self.motors = []
         self.robot_speed = robot_speed
         self._motors_check_per_second = motors_check_per_second
+        self._motors_point_to_point_check_per_second = motors_point_to_point_check_per_second
         self._thread_motors = None
 
         if self._motors_check_per_second is None:
             self._motors_check_per_second = configurations.MOTORS_CHECK_PER_SECOND
+        if self._motors_point_to_point_check_per_second is None:
+            self._motors_point_to_point_check_per_second = configurations.MOTORS_POINT_TO_POINT_CHECK_PER_SECOND
 
         self._init_robot(config_path)
 
@@ -118,6 +123,54 @@ class RobotSDK:
         """
         found = [m for m in self.motors if m.id == identifier]
         return found[0] if len(found) == 1 else None
+
+    def move_point_to_point(self, motors_goal_list: list, seconds: float, blocking: bool = False):
+        """
+        Method to move several motors simultaneously towards the goal angle position.
+        This method calc the future positions of the motors and then use _exec_point_to_point().
+        :param motors_goal_list: list of {"key": key, "goal_angle": angle}.
+        :param seconds: duration in seconds of the simultaneous movement.
+        :param blocking: if False start a dedicated thread to handle the movements.
+        """
+        logger.info("move_point_to_point: {} in {} sec".format(motors_goal_list, seconds))
+        point_to_point = []
+        for item in motors_goal_list:
+            m = self.get_motor(item["key"])
+            if m is None:
+                logger.warning("move_point_to_point: motor with key '{}' not found".format(item["key"]))
+                continue
+
+            goal = item["goal_angle"]
+            current = m.get_goal_angle()
+            difference = goal - current
+            point_to_point.append({
+                "key": item["key"],
+                "start": current,
+                "step": difference / (seconds * self._motors_point_to_point_check_per_second)
+            })
+
+        number_of_steps = self._motors_point_to_point_check_per_second * seconds
+        if blocking:
+            logger.debug("_exec_point_to_point with {} steps: {}".format(number_of_steps, point_to_point))
+            self._exec_point_to_point(point_to_point, number_of_steps)
+        else:
+            logger.debug("_exec_point_to_point thread with {} steps: {}".format(number_of_steps, point_to_point))
+            threading.Thread(target=self._exec_point_to_point, args=(point_to_point, number_of_steps,)).start()
+
+    def _exec_point_to_point(self, point_to_point: list, number_of_steps: int):
+        """
+        Auxiliary method to handle the movement of several motors simultaneously.
+        :param point_to_point: list of {"key": key, "start": start, "step": step}.
+        :param number_of_steps: duration in seconds of the simultaneous movement.
+        """
+        step = 0
+        last_time = time.time()
+        while step < number_of_steps:
+            if (time.time() - last_time) > (1 / self._motors_point_to_point_check_per_second) / self.robot_speed:
+                last_time = time.time()
+                step = step + 1
+                for move in point_to_point:
+                    self.get_motor(move["key"]).set_goal_angle(move["start"] + move["step"] * step)
 
     def get_motors_list_abs_angles(self) -> list:
         """
