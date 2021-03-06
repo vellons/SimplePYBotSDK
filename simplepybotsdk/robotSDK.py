@@ -146,10 +146,10 @@ class RobotSDK:
             point_to_point.append({
                 "key": item["key"],
                 "start": current,
-                "step": difference / (seconds * self._motors_point_to_point_check_per_second)
+                "step": difference / ((seconds * self._motors_point_to_point_check_per_second) if seconds != 0 else 1)
             })
 
-        number_of_steps = self._motors_point_to_point_check_per_second * seconds
+        number_of_steps = self._motors_point_to_point_check_per_second * seconds if seconds != 0 else 1
         if blocking:
             logger.debug("_exec_point_to_point with {} steps: {}".format(number_of_steps, point_to_point))
             self._exec_point_to_point(point_to_point, number_of_steps)
@@ -164,7 +164,7 @@ class RobotSDK:
         :param number_of_steps: duration in seconds of the simultaneous movement.
         """
         step = 0
-        last_time = time.time()
+        last_time = 0
         while step < number_of_steps:
             if (time.time() - last_time) > (1 / self._motors_point_to_point_check_per_second) / self.robot_speed:
                 last_time = time.time()
