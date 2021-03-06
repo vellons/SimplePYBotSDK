@@ -4,7 +4,7 @@ from time import sleep
 
 logging.basicConfig(level=logging.DEBUG, filename='log.log', format='%(asctime)s %(levelname)s %(name)s: %(message)s')
 
-SOCKET_HOST = "127.0.0.1"
+SOCKET_HOST = "localhost"
 SOCKET_PORT = 65432
 
 if __name__ == "__main__":
