@@ -91,25 +91,23 @@ class RobotRESTSDK(RobotWebSocketSDK):
             "motors_check_per_second": self._motors_check_per_second,
             "robot_ip": get_my_ip(),
             "rest_base_url": self.rest_base_url,
-            "rest_enable_cors": self.rest_enable_cors,
-            "socket_port": self._web_socket_port,
-            "socket_send_per_second": self._web_socket_send_per_second
+            "rest_enable_cors": self.rest_enable_cors
         }
 
-    def _rest_hello_world(self):
+    def _rest_hello_world(self, root, request):
         detail = "Hello World! These are web services for robot name: '{}'".format(self.configuration["name"])
         return Response(json_body={"detail": detail})
 
-    def _rest_robot_configuration(self):
+    def _rest_robot_configuration(self, root, request):
         return Response(json_body=self.configuration)
 
-    def _rest_robot_status(self):
+    def _rest_robot_status(self, root, request):
         return Response(json_body=self.get_robot_dict_status())
 
-    def _rest_robot_status_absolute(self):
+    def _rest_robot_status_absolute(self, root, request):
         return Response(json_body=self.get_robot_dict_status(absolute=True))
 
-    def _rest_robot_sdk_info(self):
+    def _rest_robot_sdk_info(self, root, request):
         return Response(json_body=self.get_sdk_infos())
 
     def _rest_robot_sdk_patch(self, root, request):
@@ -117,12 +115,13 @@ class RobotRESTSDK(RobotWebSocketSDK):
             return Response(json_body={})
         try:
             self.robot_speed = round(request.json_body["robot_speed"], 2)
+            logger.debug("set robot_speed to {}".format(self.robot_speed))
             return Response(json_body=self.get_sdk_infos())
         except Exception as e:
             logger.error("[rest_thread]: robot_sdk_patch: {}".format(e))
             return Response(json_body={"detail": "Bad request. Use robot_speed field"}, status=400)
 
-    def _rest_robot_motors(self):
+    def _rest_robot_motors(self, root, request):
         motors = []
         for m in self.motors:
             motors.append(dict(m))
