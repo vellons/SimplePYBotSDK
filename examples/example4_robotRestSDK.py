@@ -28,7 +28,7 @@ if __name__ == "__main__":
     robot.rest_serve_forever()
 
     sleep(10)
-    robot.robot_speed = 1  # Make robot's motors move 10x slower
+    # robot.robot_speed = 0.1  # Make robot's motors move 10x slower
     print("goto t")
     robot.go_to_pose("t")
     sleep(7)

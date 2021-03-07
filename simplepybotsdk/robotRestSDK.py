@@ -44,23 +44,27 @@ class RobotRESTSDK(RobotWebSocketSDK):
         with Configurator() as config:
             config.add_route("hello_world", self.rest_base_url + "/")
             config.add_view(self._rest_hello_world, route_name="hello_world")
-            config.add_route("robot_configuration", self.rest_base_url + "/configuration/", request_method="GET")
-            config.add_view(self._rest_robot_configuration, route_name="robot_configuration")
-            config.add_route("robot_status", self.rest_base_url + "/status/", request_method="GET")
-            config.add_view(self._rest_robot_status, route_name="robot_status")
-            config.add_route("robot_status_abs", self.rest_base_url + "/status/absolute/", request_method="GET")
-            config.add_view(self._rest_robot_status_absolute, route_name="robot_status_abs")
-            config.add_route("robot_sdk_info", self.rest_base_url + "/sdk/", request_method="GET")
-            config.add_view(self._rest_robot_sdk_info, route_name="robot_sdk_info")
-            config.add_route("robot_sdk_patch", self.rest_base_url + "/sdk/", request_method=["PATCH", "OPTIONS"])
-            config.add_view(self._rest_robot_sdk_patch, route_name="robot_sdk_patch")
-            config.add_route("robot_motors", self.rest_base_url + "/motors/", request_method="GET")
-            config.add_view(self._rest_robot_motors, route_name="robot_motors")
-            config.add_route("robot_motor_by_key", self.rest_base_url + "/motors/{key}/", request_method="GET")
-            config.add_view(self._rest_robot_motor_detail_by_key, route_name="robot_motor_by_key")
-            config.add_route("robot_motor_patch_by_key", self.rest_base_url + "/motors/{key}/",
+            config.add_route("rest_configuration", self.rest_base_url + "/configuration/", request_method="GET")
+            config.add_view(self._rest_robot_configuration, route_name="rest_configuration")
+            config.add_route("rest_status", self.rest_base_url + "/status/", request_method="GET")
+            config.add_view(self._rest_robot_status, route_name="rest_status")
+            config.add_route("rest_status_abs", self.rest_base_url + "/status/absolute/", request_method="GET")
+            config.add_view(self._rest_robot_status_absolute, route_name="rest_status_abs")
+            config.add_route("rest_sdk_info", self.rest_base_url + "/sdk/", request_method="GET")
+            config.add_view(self._rest_robot_sdk_info, route_name="rest_sdk_info")
+            config.add_route("rest_sdk_patch", self.rest_base_url + "/sdk/", request_method=["PATCH", "OPTIONS"])
+            config.add_view(self._rest_robot_sdk_patch, route_name="rest_sdk_patch")
+            config.add_route("rest_motors", self.rest_base_url + "/motors/", request_method="GET")
+            config.add_view(self._rest_robot_motors, route_name="rest_motors")
+            config.add_route("rest_motor_by_key", self.rest_base_url + "/motors/{key}/", request_method="GET")
+            config.add_view(self._rest_robot_motor_detail_by_key, route_name="rest_motor_by_key")
+            config.add_route("rest_motor_patch_by_key", self.rest_base_url + "/motors/{key}/",
                              request_method=["PATCH", "OPTIONS"])
-            config.add_view(self._rest_robot_motor_patch_by_key, route_name="robot_motor_patch_by_key")
+            config.add_view(self._rest_robot_motor_patch_by_key, route_name="rest_motor_patch_by_key")
+            config.add_route("rest_go_to_pose", self.rest_base_url + "/go-to-pose/{key}/",
+                             request_method=["PATCH", "OPTIONS"])
+            config.add_view(self._rest_go_to_pose, route_name="rest_go_to_pose")
+
             if self.rest_enable_cors:
                 config.add_subscriber(add_cors_headers_response_callback, NewRequest)
         app = config.make_wsgi_app()
@@ -147,6 +151,16 @@ class RobotRESTSDK(RobotWebSocketSDK):
         except Exception as e:
             logger.error("[rest_thread]: robot_motor_patch_by_key: {}".format(e))
             return Response(json_body={"detail": "Bad request. Use goal_angle key"}, status=400)
+
+    def _rest_go_to_pose(self, root, request):
+        if request.method == "OPTIONS":
+            return Response(json_body={})
+        key = request.matchdict["key"]
+        result = self.go_to_pose(key, 0, True)
+        if result:
+            return Response(json_body={"detail": "Going to pose"})
+        return Response(
+            json_body={"detail": "Something went wrong. Se all available pose with /configuration/"}, status=400)
 
 
 def add_cors_headers_response_callback(event):

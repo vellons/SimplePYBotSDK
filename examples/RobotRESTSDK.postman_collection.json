@@ -186,6 +186,34 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "go-to-pose/{key}/",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"goal_angle\": 50\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{server}}/go-to-pose/standby/",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"go-to-pose",
+						"standby",
+						""
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [

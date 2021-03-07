@@ -158,7 +158,7 @@ class RobotSDK:
         for item in motors_goal:
             m = self.get_motor(item)
             if m is None:
-                logger.warning("move_point_to_point: motor with key '{}' not found".format(item["key"]))
+                logger.warning("move_point_to_point: motor with key '{}' not found".format(item))
                 continue
 
             goal = motors_goal[item]
