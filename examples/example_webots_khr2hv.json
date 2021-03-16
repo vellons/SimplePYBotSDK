@@ -79,6 +79,20 @@
       "angle_speed": 60
     }
   },
+  "sensors": {
+    "gyroscope_x": {
+      "id": "gyroscope_x",
+      "offset": 0.0
+    },
+    "gyroscope_y": {
+      "id": "gyroscope_y",
+      "offset": 0.0
+    },
+    "gyroscope_z": {
+      "id": "gyroscope_z",
+      "offset": 0.0
+    }
+  },
   "poses": {
     "standby": {
       "head_z": 0,

@@ -4,7 +4,7 @@ import json
 import time
 from datetime import datetime
 import simplepybotsdk.configurations as configurations
-from simplepybotsdk.motor import Motor as Motor
+from simplepybotsdk import Sensor, Motor
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ class RobotSDK:
         logger.info("RobotSDK version {} initialization".format(configurations.VERSION))
         self.config_path = None
         self.configuration = None
+        self.sensors = []
         self.motors = []
         self.robot_speed = robot_speed
         self._motors_check_per_second = motors_check_per_second
@@ -53,10 +54,24 @@ class RobotSDK:
             exit(-1)
 
         logger.debug("Robot configuration: {}".format(self.configuration))
-        self._init_motors()
+        if ("id" in self.configuration) and ("version" in self.configuration) and ("name" in self.configuration):
+            self._init_sensors()
+            self._init_motors()
+        else:
+            logger.error("Initialization configuration error: id, version and name are required in configuration file")
+            print("Initialization configuration error: id, version and name are required in configuration file")
+            exit(-1)
 
     def _init_motors(self):
         """Initialize motors from JSON configuration and start thread."""
+        if "motors" not in self.configuration:
+            logger.error("Initialization configuration error: no motors found in the configuration file")
+            print("Initialization configuration error: no motors found in the configuration file")
+            exit(-1)
+        if "motors_type" not in self.configuration:
+            logger.error("Initialization configuration error: no motors_type found in the configuration file")
+            print("Initialization configuration error: no motors_type found in the configuration file")
+            exit(-1)
         for key, m in self.configuration["motors"].items():
             self.motors.append(Motor(
                 identifier=m["id"],
@@ -108,6 +123,16 @@ class RobotSDK:
                     print("[motors_thread]: exception: {}".format(e))
                     pass
 
+    def _init_sensors(self):
+        """Initialize sensors from JSON configuration."""
+        for key, s in self.configuration["sensors"].items():
+            self.sensors.append(Sensor(
+                identifier=s["id"],
+                key=key,
+                offset=s["offset"]
+            ))
+        logger.debug("Sensors initialization completed. Total sensors: {} {}".format(len(self.sensors), self.sensors))
+
     def get_motor(self, key: str) -> Motor:
         """
         :param key: key to use to find the motor.
@@ -122,6 +147,22 @@ class RobotSDK:
         :return: motor if found or None.
         """
         found = [m for m in self.motors if m.id == identifier]
+        return found[0] if len(found) == 1 else None
+
+    def get_sensor(self, key: str) -> Sensor:
+        """
+        :param key: key to use to find the sensor.
+        :return: sensor if found or None.
+        """
+        found = [s for s in self.sensors if s.key == key]
+        return found[0] if len(found) == 1 else None
+
+    def get_sensor_by_id(self, identifier: str) -> Sensor:
+        """
+        :param identifier: id to use to find the sensor.
+        :return: sensor if found or None.
+        """
+        found = [s for s in self.sensors if s.id == identifier]
         return found[0] if len(found) == 1 else None
 
     def go_to_pose(self, pose_name: str, seconds: float = 0, blocking: bool = False):
@@ -221,6 +262,19 @@ class RobotSDK:
             })
         return motors
 
+    def get_sensors_list(self) -> list:
+        """
+        :return: list of sensors with their value.
+        """
+        sensors = []
+        for s in self.sensors:
+            sensors.append({
+                "id": s.id,
+                "key": s.key,
+                "value": s.get_value()
+            })
+        return sensors
+
     def get_sdk_infos(self) -> dict:
         """
         :return: dict of sdk infos.
@@ -245,7 +299,7 @@ class RobotSDK:
         """
         dict_robot = {
             "motors": self.get_motors_list_abs_angles() if absolute else self.get_motors_list_relative_angles(),
-            "sensors": {},
+            "sensors": self.get_sensors_list(),
             "format": "absolute" if absolute else "relative",
             "sdk": self.get_sdk_infos(),
             "system": self.get_system_infos()
