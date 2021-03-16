@@ -120,7 +120,8 @@ class RobotRESTSDK(RobotWebSocketSDK):
         if request.method == "OPTIONS":
             return Response(json_body={})
         try:
-            self.robot_speed = round(request.json_body["robot_speed"], 2)
+            speed = round(request.json_body["robot_speed"], 2)
+            self.robot_speed = 0.05 if speed < 0.05 else speed
             logger.debug("set robot_speed to {}".format(self.robot_speed))
             return Response(json_body=self.get_sdk_infos())
         except Exception as e:
