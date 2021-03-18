@@ -63,7 +63,10 @@ class RobotRESTSDK(RobotWebSocketSDK):
             config.add_view(self._rest_robot_motor_patch_by_key, route_name="rest_motor_patch_by_key")
             config.add_route("rest_go_to_pose", self.rest_base_url + "/go-to-pose/{key}/",
                              request_method=["POST", "OPTIONS"])
-            config.add_view(self._rest_go_to_pose, route_name="rest_go_to_pose")
+            config.add_view(self._rest_robot_go_to_pose, route_name="rest_go_to_pose")
+            config.add_route("rest_move_point_to_point", self.rest_base_url + "/move-point-to-point/",
+                             request_method=["POST", "OPTIONS"])
+            config.add_view(self._rest_robot_move_point_to_point, route_name="rest_move_point_to_point")
             config.add_route("rest_sensors", self.rest_base_url + "/sensors/", request_method="GET")
             config.add_view(self._rest_robot_sensors, route_name="rest_sensors")
             config.add_route("rest_sensors_by_key", self.rest_base_url + "/sensors/{key}/", request_method="GET")
@@ -145,7 +148,7 @@ class RobotRESTSDK(RobotWebSocketSDK):
             logger.error("[rest_thread]: robot_motor_patch_by_key: {}".format(e))
             return Response(json_body={"detail": "Bad request. Use goal_angle key"}, status=400)
 
-    def _rest_go_to_pose(self, root, request):
+    def _rest_robot_go_to_pose(self, root, request):
         if request.method == "OPTIONS":
             return Response(json_body={})
         key = request.matchdict["key"]
@@ -156,9 +159,27 @@ class RobotRESTSDK(RobotWebSocketSDK):
                 seconds = 0
         result = self.go_to_pose(key, seconds, seconds == 0)
         if result:
-            return Response(json_body={"detail": "Going to pose {}".format(key)})
+            return Response(json_body={"detail": "Going to pose {} in {} seconds".format(key, seconds)})
         return Response(
             json_body={"detail": "Something went wrong. See all available pose with /configuration/"}, status=400)
+
+    def _rest_robot_move_point_to_point(self, root, request):
+        if request.method == "OPTIONS":
+            return Response(json_body={})
+        try:
+            seconds = 0
+            pose = dict(request.json_body)
+            if "seconds" in request.json_body:
+                seconds = request.json_body["seconds"]
+                del pose['seconds']
+                if type(seconds) is not int and type(seconds) is not float:
+                    seconds = 0
+            print(pose)
+            self.move_point_to_point(pose, seconds, seconds == 0)
+            return Response(json_body={"detail": "Move point to point in {} seconds".format(seconds)})
+        except Exception as e:
+            logger.error("[rest_thread]: robot_move_point_to_point: {}".format(e))
+            return Response(json_body={"detail": "Bad request. Use: {\"motor_key\": goal_angle}"}, status=400)
 
     def _rest_robot_sensors(self, root, request):
         sensors = []
