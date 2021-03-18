@@ -62,8 +62,12 @@ class RobotRESTSDK(RobotWebSocketSDK):
                              request_method=["PATCH", "OPTIONS"])
             config.add_view(self._rest_robot_motor_patch_by_key, route_name="rest_motor_patch_by_key")
             config.add_route("rest_go_to_pose", self.rest_base_url + "/go-to-pose/{key}/",
-                             request_method=["PATCH", "OPTIONS"])
+                             request_method=["POST", "OPTIONS"])
             config.add_view(self._rest_go_to_pose, route_name="rest_go_to_pose")
+            config.add_route("rest_sensors", self.rest_base_url + "/sensors/", request_method="GET")
+            config.add_view(self._rest_robot_sensors, route_name="rest_sensors")
+            config.add_route("rest_sensors_by_key", self.rest_base_url + "/sensors/{key}/", request_method="GET")
+            config.add_view(self._rest_robot_sensors_detail_by_key, route_name="rest_sensors_by_key")
 
             if self.rest_enable_cors:
                 config.add_subscriber(add_cors_headers_response_callback, NewRequest)
@@ -145,11 +149,28 @@ class RobotRESTSDK(RobotWebSocketSDK):
         if request.method == "OPTIONS":
             return Response(json_body={})
         key = request.matchdict["key"]
-        result = self.go_to_pose(key, 0, True)
+        seconds = 0
+        if request.body and "seconds" in request.json_body:
+            seconds = request.json_body["seconds"]
+            if type(seconds) is not int and type(seconds) is not float:
+                seconds = 0
+        result = self.go_to_pose(key, seconds, seconds == 0)
         if result:
-            return Response(json_body={"detail": "Going to pose"})
+            return Response(json_body={"detail": "Going to pose {}".format(key)})
         return Response(
-            json_body={"detail": "Something went wrong. Se all available pose with /configuration/"}, status=400)
+            json_body={"detail": "Something went wrong. See all available pose with /configuration/"}, status=400)
+
+    def _rest_robot_sensors(self, root, request):
+        sensors = []
+        for s in self.sensors:
+            sensors.append(dict(s))
+        return Response(json_body=sensors)
+
+    def _rest_robot_sensors_detail_by_key(self, root, request):
+        s = self.get_sensor(request.matchdict["key"])
+        if s is None:
+            return Response(json_body={"detail": "Not found."}, status=404)
+        return Response(json_body=dict(s))
 
 
 def add_cors_headers_response_callback(event):
