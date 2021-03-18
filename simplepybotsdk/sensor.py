@@ -16,9 +16,9 @@ class Sensor:
         self.key = key
         self.offset = offset
         logger.debug("{}: initialization".format(self.key))
-        self.abs_value = 0
+        self.abs_value = 0.0
 
-    def get_value(self):
+    def get_value(self) -> float:
         return self.abs_value + self.offset
 
     def set_value(self, value: float):
@@ -26,6 +26,11 @@ class Sensor:
 
     def set_abs_value(self, value: float):
         self.abs_value = value
+
+    def __iter__(self):
+        for key in self.__dict__:
+            yield key, getattr(self, key)
+        yield "value", self.get_value()
 
     def __str__(self):
         return "<{} value: {:.2f}>".format(self.key, self.get_value())
