@@ -88,18 +88,6 @@ class RobotRESTSDK(RobotWebSocketSDK):
                   .format(self._rest_host, self._rest_port, self.rest_base_url))
         self._server.serve_forever()
 
-    def get_sdk_infos(self) -> dict:
-        """
-        :return: dict of sdk infos.
-        """
-        return {
-            "robot_speed": self.robot_speed,
-            "motors_check_per_second": self._motors_check_per_second,
-            "robot_ip": get_my_ip(),
-            "rest_base_url": self.rest_base_url,
-            "rest_enable_cors": self.rest_enable_cors
-        }
-
     def _rest_hello_world(self, root, request):
         detail = "Hello World! These are web services for robot name: '{}'".format(self.configuration["name"])
         return Response(json_body={"detail": detail})

@@ -125,6 +125,9 @@ class RobotSDK:
 
     def _init_sensors(self):
         """Initialize sensors from JSON configuration."""
+        if "sensors" not in self.configuration:
+            logger.debug("No sensors found in the configuration file")
+            return
         for key, s in self.configuration["sensors"].items():
             self.sensors.append(Sensor(
                 identifier=s["id"],
