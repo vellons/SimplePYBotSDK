@@ -157,6 +157,7 @@ class RobotRESTSDK(RobotWebSocketSDK):
             seconds = request.json_body["seconds"]
             if type(seconds) is not int and type(seconds) is not float:
                 seconds = 0
+            seconds = 0 if seconds < 0.5 else seconds
         result = self.go_to_pose(key, seconds, seconds == 0)
         if result:
             return Response(json_body={"detail": "Going to pose {} in {} seconds".format(key, seconds)})
@@ -174,7 +175,7 @@ class RobotRESTSDK(RobotWebSocketSDK):
                 del pose['seconds']
                 if type(seconds) is not int and type(seconds) is not float:
                     seconds = 0
-            print(pose)
+                seconds = 0 if seconds < 0.5 else seconds
             self.move_point_to_point(pose, seconds, seconds == 0)
             return Response(json_body={"detail": "Move point to point in {} seconds".format(seconds)})
         except Exception as e:
