@@ -29,6 +29,7 @@ class RobotSDK:
         self._motors_check_per_second = motors_check_per_second
         self._motors_point_to_point_check_per_second = motors_point_to_point_check_per_second
         self._thread_motors = None
+        self.show_startup_message = True
 
         if self._motors_check_per_second is None:
             self._motors_check_per_second = configurations.MOTORS_CHECK_PER_SECOND
@@ -96,7 +97,8 @@ class RobotSDK:
         If motor abs_goal_angle is different from abs_current_angle the motor will be moved based on its angle_speed.
         """
         logger.debug("[motors_thread]: start handling {} motors".format(len(self.motors)))
-        print("[motors_thread]: start handling {} motors".format(len(self.motors)))
+        if self.show_startup_message:
+            print("[motors_thread]: start handling {} motors".format(len(self.motors)))
         last_time = time.time()
         motors_conf = self.configuration["motors_type"]
         while True:

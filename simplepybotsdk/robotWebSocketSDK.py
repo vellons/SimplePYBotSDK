@@ -54,8 +54,9 @@ class RobotWebSocketSDK(RobotSDK):
         """
         logger.debug("[websocket_thread]: start listening for connections on {}"
                      .format((self._web_socket_host, self._web_socket_port)))
-        print("[websocket_thread]: listening for connections on {}"
-              .format((self._web_socket_host, self._web_socket_port)))
+        if self.show_startup_message:
+            print("[websocket_thread]: listening for connections on {}"
+                  .format((self._web_socket_host, self._web_socket_port)))
 
         self._web_socket_asyncio_loop.run_until_complete(self._web_socket_server)
         self._web_socket_asyncio_loop.run_forever()
