@@ -2,7 +2,7 @@ import logging
 import simplepybotsdk
 from time import sleep
 
-logging.basicConfig(level=logging.DEBUG, filename='log.log', format='%(asctime)s %(levelname)s %(name)s: %(message)s')
+logging.basicConfig(level=logging.WARNING, filename='log.log', format='%(asctime)s %(levelname)s %(name)s: %(message)s')
 logging.getLogger('websockets.protocol').setLevel(logging.ERROR)
 logging.getLogger('asyncio').setLevel(logging.ERROR)
 logging.getLogger('asyncio.coroutines').setLevel(logging.ERROR)
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     robot.rest_serve_forever()
 
     sleep(10)
-    # robot.robot_speed = 0.1  # Make robot's motors move 10x slower
+    robot.robot_speed = 0.2  # Make robot's motors move 5x slower
     print("goto t")
     robot.go_to_pose("t")
     sleep(7)
