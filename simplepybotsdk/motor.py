@@ -52,7 +52,7 @@ class Motor:
         if self.angle_limit[0] <= angle <= self.angle_limit[1]:
             future_angle = angle + self.offset
             self.abs_goal_angle = future_angle if self.orientation == 0 else -future_angle
-            logger.info("{}: set_goal_angle: {:.2f} [{:.2f}]".format(self.key, angle, self.abs_goal_angle))
+            logger.debug("{}: set_goal_angle: {:.2f} [{:.2f}]".format(self.key, angle, self.abs_goal_angle))
 
         elif self.angle_limit[0] > angle:
             future_angle = self.angle_limit[0] + self.offset

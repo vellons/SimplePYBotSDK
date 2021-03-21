@@ -69,6 +69,8 @@ class RobotSocketSDK(RobotSDK):
         thread_name = threading.current_thread().name
         try:
             logger.info("[{}]: got connection from: {}".format(thread_name, addr))
+            if self.show_log_message:
+                print("[{}]: got connection from: {}".format(thread_name, addr))
             last_time = time.time()
             absolute = False
             while True:
@@ -87,7 +89,9 @@ class RobotSocketSDK(RobotSDK):
                         self.socket_recv_callback(message, addr)
                     conn.send(json.dumps(self.get_robot_dict_status(absolute=absolute)).encode("utf-8"))
         except Exception as e:
-            logger.info("[{}]: connection with {} closed. {}".format(thread_name, addr, e))
+            logger.info("[{}]: connection closed with {}. {}".format(thread_name, addr, e))
+            if self.show_log_message:
+                print("[{}]: connection closed with {}. {}".format(thread_name, addr, e))
         finally:
             conn.close()
 
@@ -113,10 +117,9 @@ class RobotSocketSDK(RobotSDK):
                         return True, j
                     except Exception as e:
                         logger.error("[{}]: fail to decode message from: {}: {}. {}".format(thread_name, addr, data, e))
-                        print("[{}]: fail to decode message from: {}: {}. {}".format(thread_name, addr, data, e))
         return False, None
 
-    def socket_recv_callback(self, message, addr):
+    def socket_recv_callback(self, message: dict, addr: tuple):
         """
         Method called when a message is received. Override this to parse message.
         :param message: json message received.

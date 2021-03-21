@@ -180,7 +180,7 @@ class RobotSDK:
         if "poses" in self.configuration:
             if pose_name in self.configuration["poses"]:
                 pose = self.configuration["poses"][pose_name]
-                logger.debug("go_to_pose: {}".format(pose_name))
+                logger.info("go_to_pose: {}".format(pose_name))
                 if seconds == 0:
                     blocking = True  # avoid starting the thread
                 self.move_point_to_point(pose, seconds, blocking)
