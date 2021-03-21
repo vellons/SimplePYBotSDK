@@ -48,7 +48,7 @@ class RobotSocketSDK(RobotSDK):
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.bind((self._socket_host, self._socket_port))
         self._socket.listen(configurations.SOCKET_INCOMING_LIMIT - 1)
-        if self.show_startup_message:
+        if self.show_log_message:
             print("[socket_thread]: listening for connections on {}".format((self._socket_host, self._socket_port)))
 
         while True:

@@ -89,18 +89,18 @@ class RobotRESTSDK(RobotWebSocketSDK):
     def _rest_thread_handler(self):
         logger.debug("[rest_thread]: start serving on {}".format((self._rest_host, self._rest_port)))
         ip_addr = self._rest_host
-        if self._rest_host == "0.0.0.0" and self.show_startup_message:
+        if self._rest_host == "0.0.0.0" and self.show_log_message:
             ip_addr = get_my_ip()
             print("[rest_thread]: start serving at:\n\t- Local:   http://localhost:{}{}/\n\t- Network: http://{}:{}{}/"
                   .format(self._rest_port, self.rest_base_url, ip_addr, self._rest_port, self.rest_base_url))
-        elif self.show_startup_message:
+        elif self.show_log_message:
             print("[rest_thread]: start serving at: http://{}:{}{}/"
                   .format(ip_addr, self._rest_port, self.rest_base_url))
-        if self.show_startup_message:
+        if self.show_log_message:
             link = self._dashboard_link + "/?webserverurl=http://" + ip_addr + ":" + str(self._rest_port) + \
                    self.rest_base_url + "&websocketurl=ws://" + ip_addr + ":" + str(self._web_socket_port) + \
                    "&autoconnect=1"
-            link += " Remember to 'Unblock mixed content' in your browser"
+            link += " Remember to 'Unblock mixed content' in browser"
             print("[rest_thread]: dashboard link: {}".format(link))
         self._server.serve_forever()
 
