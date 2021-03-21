@@ -6,7 +6,7 @@ from controller import Robot
 
 SOCKET_HOST = "localhost"
 SOCKET_PORT = 65432
-PATH = "/absolute/"
+PATH = "/"
 MAX_SPEED = 6.28  # Max motor speed
 
 # Create the Robot instance
@@ -22,6 +22,7 @@ def move_robot(motors):
 
 async def loop():
     websocket = await websockets.connect("ws://" + SOCKET_HOST + ":" + str(SOCKET_PORT) + PATH)
+    await websocket.send('{"socket": {"format": "absolute"}}'.encode())
 
     while robot.step(time_step) != -1:
         try:

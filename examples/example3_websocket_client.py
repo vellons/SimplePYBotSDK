@@ -4,11 +4,12 @@ import websockets
 SOCKET_HOST = "localhost"
 SOCKET_PORT = 65432
 PATH = "/"
-#PATH = "/absolute/"
 
 
 async def hello():
     websocket = await websockets.connect("ws://" + SOCKET_HOST + ":" + str(SOCKET_PORT) + PATH)
+    # await websocket.send('{"socket": {"format": "absolute"}}'.encode())
+    # await websocket.send('{"socket": {"format": "block"}}'.encode())
 
     while True:
         message = await websocket.recv()

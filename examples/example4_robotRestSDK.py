@@ -2,7 +2,7 @@ import logging
 import simplepybotsdk
 from time import sleep
 
-logging.basicConfig(level=logging.WARNING, filename='log.log', format='%(asctime)s %(levelname)s %(name)s: %(message)s')
+logging.basicConfig(level=logging.INFO, filename='log.log', format='%(asctime)s %(levelname)s %(name)s: %(message)s')
 logging.getLogger('websockets.protocol').setLevel(logging.ERROR)
 logging.getLogger('asyncio').setLevel(logging.ERROR)
 logging.getLogger('asyncio.coroutines').setLevel(logging.ERROR)
@@ -16,6 +16,7 @@ REST_PORT = 8000
 if __name__ == "__main__":
     print("Example4: Beginning test")
     print("simplepybotsdk version is", simplepybotsdk.__version__)
+    # Set SOCKET_AS_WEB_SOCKET environment var to False to use standard socket
     robot = simplepybotsdk.RobotRESTSDK(
         config_path="example_webots_khr2hv.json",
         socket_host=SOCKET_HOST,
