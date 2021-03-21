@@ -1,16 +1,19 @@
 import logging
 import threading
+import os
 from pyramid.config import Configurator
 from pyramid.response import Response
 from pyramid.events import NewRequest
 from wsgiref.simple_server import make_server
 import simplepybotsdk.configurations as configurations
 from simplepybotsdk.robotWebSocketSDK import RobotWebSocketSDK as RobotWebSocketSDK
+from simplepybotsdk.robotSocketSDK import RobotSocketSDK as RobotSocketSDK
 
 logger = logging.getLogger(__name__)
+SOCKET_AS_WEB_SOCKET = os.getenv('SOCKET_AS_WEB_SOCKET', True)
 
 
-class RobotRESTSDK(RobotWebSocketSDK):
+class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotSocketSDK):
     """RobotSDK + RobotWebSocketSDK + REST robot's component control with Pyramid."""
 
     def __init__(self, config_path: str, socket_host: str, socket_port: int, rest_host: str, rest_port: int,
@@ -98,8 +101,10 @@ class RobotRESTSDK(RobotWebSocketSDK):
                   .format(ip_addr, self._rest_port, self.rest_base_url))
         if self.show_log_message:
             link = self._dashboard_link + "/?webserverurl=http://" + ip_addr + ":" + str(self._rest_port) + \
-                   self.rest_base_url + "&websocketurl=ws://" + ip_addr + ":" + str(self._web_socket_port) + \
-                   "&autoconnect=1"
+                   self.rest_base_url
+            if hasattr(self, '_web_socket_port'):
+                link += "&websocketurl=ws://" + ip_addr + ":" + str(self._web_socket_port)
+            link += "&autoconnect=1"
             link += " Remember to 'Unblock mixed content' in browser"
             print("[rest_thread]: dashboard link: {}".format(link))
         self._server.serve_forever()

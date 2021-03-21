@@ -2,12 +2,12 @@ import logging
 import threading
 import json
 import time
-import asyncio
-import websockets
+from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 import simplepybotsdk.configurations as configurations
 from simplepybotsdk.robotSDK import RobotSDK as RobotSDK
 
 logger = logging.getLogger(__name__)
+robot_instance = None
 
 
 class RobotWebSocketSDK(RobotSDK):
@@ -29,24 +29,16 @@ class RobotWebSocketSDK(RobotSDK):
         self._web_socket_host = socket_host
         self._web_socket_port = socket_port
         self._web_socket_send_per_second = socket_send_per_second
-        self._web_socket_threaded_connection = set()
+        self.web_socket_threaded_connection = set()
         if self._web_socket_send_per_second is None:
             self._web_socket_send_per_second = configurations.WEB_SOCKET_SEND_PER_SECOND
         logger.debug("RobotWebSocketSDK initialization")
 
-        self._web_socket_asyncio_loop = asyncio.get_event_loop()
-        self._web_socket_server = websockets.serve(
-            self._web_socket_incoming_handler, self._web_socket_host, self._web_socket_port
-        )
-
+        self._thread_web_socket_send_data = None
         self._thread_web_socket = threading.Thread(target=self._web_socket_thread_handler, args=())
+        self._thread_web_socket.name = "websocket_thread"
         self._thread_web_socket.daemon = True
         self._thread_web_socket.start()
-
-        # self._thread_web_socket_sender = threading.Thread(target=self._web_socket_thread_sender, args=())
-        # self._thread_web_socket_sender.daemon = True
-        # self._thread_web_socket_sender.start()
-        logger.debug("RobotWebSocketSDK threads started")
 
     def _web_socket_thread_handler(self):
         """
@@ -54,75 +46,111 @@ class RobotWebSocketSDK(RobotSDK):
         """
         logger.debug("[websocket_thread]: start listening for connections on {}"
                      .format((self._web_socket_host, self._web_socket_port)))
-        if self.show_startup_message:
+        global robot_instance
+        robot_instance = self
+        server = SimpleWebSocketServer(self._web_socket_host, self._web_socket_port, self.SimpleConnectionHandler)
+        if self.show_log_message:
             print("[websocket_thread]: listening for connections on {}"
                   .format((self._web_socket_host, self._web_socket_port)))
+        server.serveforever()
 
-        self._web_socket_asyncio_loop.run_until_complete(self._web_socket_server)
-        self._web_socket_asyncio_loop.run_forever()
-
-    async def _web_socket_incoming_handler(self, websocket, path):
+    def start_web_socket_send_data(self):
         """
-        This method take incoming WebSocket connection and add to the list until end of connection.
+        This method create a new thread when the first client connects.
         """
-        ip = websocket.remote_address[0]
-        if len(self._web_socket_threaded_connection) < configurations.SOCKET_INCOMING_LIMIT:
-            logger.info("[websocket_thread]: got connection from: {} with path: {}".format(ip, path))
-            self._web_socket_threaded_connection.add(websocket)
+        if self._thread_web_socket_send_data is None:
+            logger.debug("[websocket_thread]: start_web_socket_send_data thread starting")
+            self._thread_web_socket_send_data = threading.Thread(target=self._web_socket_send_data_handler, args=())
+            self._thread_web_socket_send_data.name = "websocket_thread"
+            self._thread_web_socket_send_data.daemon = True
+            self._thread_web_socket_send_data.start()
 
-            thread = threading.Thread(target=self._web_socket_client_sender, args=(websocket, path))
-            thread.daemon = True
-            thread.start()
-            try:
-                await websocket.recv()
-            except websockets.exceptions.ConnectionClosed:
-                pass
-            finally:
-                logger.info("[websocket_thread]: connection with {} closed.".format(ip))
-                self._web_socket_threaded_connection.remove(websocket)
-        else:
-            logger.info("[websocket_thread]: connection refused from: {} with path: {}".format(ip, path))
-
-    def _web_socket_client_sender(self, websocket, path):
+    def _web_socket_send_data_handler(self):
         """
-        Thread method used to send infos to active WebSocket connection
+        Thread dedicated of sending realtime date to client, in the correct format.
+        This thread send to the client a JSON dump of current state of the robot.
         """
         last_time = time.time()
+        j_relative = None
+        j_absolute = None
         try:
             while True:
                 if (time.time() - last_time) > (1 / self._web_socket_send_per_second):
                     last_time = time.time()
-                    if path == "/absolute/":
-                        c = websocket.send(json.dumps(self.get_robot_dict_status(absolute=True)).encode("utf-8"))
-                    else:
-                        c = websocket.send(json.dumps(self.get_robot_dict_status(absolute=False)).encode("utf-8"))
-                    asyncio.run_coroutine_threadsafe(c, self._web_socket_asyncio_loop)
+                    for client in self.web_socket_threaded_connection:
+                        if client.message_format == "relative":
+                            if j_relative is None:
+                                j_relative = json.dumps(self.get_robot_dict_status(absolute=False)).encode("utf-8")
+                            client.sendMessage(j_relative)
+                        elif client.message_format == "absolute":
+                            if j_absolute is None:
+                                j_absolute = json.dumps(self.get_robot_dict_status(absolute=True)).encode("utf-8")
+                            client.sendMessage(j_absolute)
+                    j_relative = None
+                    j_absolute = None
         except Exception as e:
-            ip = websocket.remote_address[0]
-            logger.info("[websocket_thread]: connection with {} closed with error. {}".format(ip, e))
+            logger.error("[websocket_thread_send_data]: _web_socket_send_data_handler crashed: {}".format(e))
+            self._thread_web_socket_send_data = None
 
-    # def _web_socket_thread_sender(self):
-    #     """
-    #     Thread method used to send infos to active WebSocket connection
-    #     """
-    #     last_time = time.time()
-    #     while True:
-    #         if (time.time() - last_time) > (1 / self._web_socket_send_per_second):
-    #             last_time = time.time()
-    #             print("Checking", len(self._web_socket_threaded_connection))
-    #             for websocket in self._web_socket_threaded_connection.copy():
-    #                 try:
-    #                     c = websocket.send(json.dumps(self.get_robot_dict_status(absolute=True)).encode("utf-8"))
-    #                     asyncio.run_coroutine_threadsafe(c, self._web_socket_asyncio_loop)
-    #                 except Exception as e:
-    #                     ip = websocket.remote_address[0]
-    #                     logger.info("[websocket_thread]: connection with {} closed with error. {}".format(ip, e))
-    #                     self._web_socket_threaded_connection.remove(websocket)
+    def web_socket_handle_incoming_message(self, socket, message, addr):
+        """
+        Method to decode the data coming from the client. Only JSON data will be accepted.
+        :param socket: socket connection instance.
+        :param message: the message to decode.
+        :param addr: tuple with ip and socket of the client connected.
+        """
+        data = message.decode("utf-8")
+        if len(data) > 0:
+            logger.debug("[websocket_thread]: got message from: {}: {}".format(addr, data))
+            try:
+                j = json.loads(data)
+                if "socket" in j and "format" in j["socket"]:
+                    f = j["socket"]["format"]
+                    logger.debug("[websocket_thread]: connection: {} now use format: {}".format(addr, f))
+                    socket.message_format = f
+                self.web_socket_recv_callback(j, addr)
+            except Exception as e:
+                logger.error("[websocket_thread]: fail to decode message from: {}: {}. {}".format(addr, data, e))
+                if self.show_log_message:
+                    print("[websocket_thread]: fail to decode message from: {}: {}. {}".format(addr, data, e))
 
-    # def web_socket_recv_callback(self, message, addr):
-    #     """
-    #     Method called when a message is received. Override this to parse message.
-    #     :param message: json message received.
-    #     :param addr: tuple with ip and socket of the client that send the message.
-    #     """
-    #     pass
+    def web_socket_recv_callback(self, message: dict, addr: tuple):
+        """
+        Method called when a message is received. Override this to parse message.
+        :param message: json message received.
+        :param addr: tuple with ip and socket of the client that send the message.
+        """
+        pass
+
+    class SimpleConnectionHandler(WebSocket):
+        """A simple class to handle websocket communication."""
+
+        def __init__(self, server, sock, address):
+            super().__init__(server, sock, address)
+            global robot_instance
+            self.robot = robot_instance
+            self.message_format = "relative"
+            if self.robot is None:
+                logger.error("[websocket_thread]: SimpleConnectionHandler: robot instance is None")
+
+        def handleMessage(self):
+            self.robot.web_socket_handle_incoming_message(self, self.data, self.address)
+
+        def handleConnected(self):
+            if len(self.robot.web_socket_threaded_connection) >= configurations.SOCKET_INCOMING_LIMIT:
+                logger.warning("[websocket_thread]: connection refused to {}".format(self.address))
+                if self.robot.show_log_message:
+                    print("[websocket_thread]: connection refused to {}".format(self.address))
+                self.handleClose()
+                return
+            logger.info("[websocket_thread]: got connection from: {}".format(self.address))
+            if self.robot.show_log_message:
+                print("[websocket_thread]: got connection from {}".format(self.address))
+            self.robot.web_socket_threaded_connection.add(self)
+            self.robot.start_web_socket_send_data()
+
+        def handleClose(self):
+            logger.info("[websocket_thread]: connection closed with {}".format(self.address))
+            if self.robot.show_log_message:
+                print("[websocket_thread]: connection closed with {}".format(self.address))
+            self.robot.web_socket_threaded_connection.remove(self)
