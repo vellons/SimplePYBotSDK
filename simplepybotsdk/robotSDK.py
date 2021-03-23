@@ -100,7 +100,7 @@ class RobotSDK:
         logger.debug("[motors_thread]: start handling {} motors".format(len(self.motors)))
         if self.show_log_message:
             print("[motors_thread]: start handling {} motors".format(len(self.motors)))
-        last_time = time.time()
+        last_time = 0
         motors_conf = self.configuration["motors_type"]
         while True:
             if (time.time() - last_time) > ((1 / self._motors_check_per_second) / self.robot_speed):

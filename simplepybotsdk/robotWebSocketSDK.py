@@ -63,7 +63,7 @@ class RobotWebSocketSDK(RobotSDK):
         This method create a new thread when the first client connects.
         """
         if self._thread_web_socket_send_data is None:
-            logger.debug("[websocket_thread]: start_web_socket_send_data thread starting")
+            logger.info("[websocket_thread]: start_web_socket_send_data thread starting")
             self._thread_web_socket_send_data = threading.Thread(target=self._web_socket_send_data_handler, args=())
             self._thread_web_socket_send_data.name = "websocket_thread"
             self._thread_web_socket_send_data.daemon = True
@@ -74,14 +74,14 @@ class RobotWebSocketSDK(RobotSDK):
         Thread dedicated of sending realtime date to client, in the correct format.
         This thread send to the client a JSON dump of current state of the robot.
         """
-        last_time = time.time()
+        last_time = 0
         j_relative = None
         j_absolute = None
         if self._web_socket_send_per_second <= 0:
             self._thread_web_socket_send_data = None
             return
         try:
-            while True:
+            while len(self.web_socket_threaded_connection) > 0:
                 if (time.time() - last_time) > (1 / self._web_socket_send_per_second):
                     last_time = time.time()
                     for client in self.web_socket_threaded_connection:
@@ -96,6 +96,8 @@ class RobotWebSocketSDK(RobotSDK):
                     j_relative = None
                     j_absolute = None
                     time.sleep(self.sleep_avoid_cpu_waste / self._web_socket_send_per_second)  # Avoid wasting CPU time
+            logger.info("[websocket_thread_send_data]: stopped due to inactivity")
+            self._thread_web_socket_send_data = None
         except Exception as e:
             logger.error("[websocket_thread_send_data]: _web_socket_send_data_handler crashed: {}".format(e))
             self._thread_web_socket_send_data = None

@@ -75,7 +75,7 @@ class RobotSocketSDK(RobotSDK):
             logger.info("[{}]: got connection from: {}".format(thread_name, addr))
             if self.show_log_message:
                 print("[{}]: got connection from: {}".format(thread_name, addr))
-            last_time = time.time()
+            last_time = 0
             absolute = False
             while True:
                 if (time.time() - last_time) > (1 / self._socket_send_per_second):
