@@ -30,6 +30,7 @@ class RobotSDK:
         self._motors_point_to_point_check_per_second = motors_point_to_point_check_per_second
         self._thread_motors = None
         self.show_log_message = True
+        self.sleep_avoid_cpu_waste = configurations.SLEEP_AVOID_CPU_WASTE  # Max value is 1
 
         if self._motors_check_per_second is None:
             self._motors_check_per_second = configurations.MOTORS_CHECK_PER_SECOND
@@ -124,6 +125,8 @@ class RobotSDK:
                     logger.error("[motors_thread]: exception: {}".format(e))
                     print("[motors_thread]: exception: {}".format(e))
                     pass
+                # Avoid wasting CPU time
+                time.sleep((self.sleep_avoid_cpu_waste / self._motors_check_per_second) / self.robot_speed)
 
     def _init_sensors(self):
         """Initialize sensors from JSON configuration."""
@@ -182,7 +185,7 @@ class RobotSDK:
                 pose = self.configuration["poses"][pose_name]
                 logger.info("go_to_pose: {}".format(pose_name))
                 if seconds == 0:
-                    blocking = True  # avoid starting the thread
+                    blocking = True  # Avoid starting the thread
                 self.move_point_to_point(pose, seconds, blocking)
                 return True
             else:
@@ -238,6 +241,9 @@ class RobotSDK:
                 step = step + 1
                 for move in point_to_point:
                     self.get_motor(move["key"]).set_goal_angle(move["start"] + move["step"] * step)
+                # Avoid wasting CPU time
+                time.sleep(
+                    (self.sleep_avoid_cpu_waste / self._motors_point_to_point_check_per_second) / self.robot_speed)
 
     def get_motors_list_abs_angles(self) -> list:
         """

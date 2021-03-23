@@ -32,6 +32,10 @@ class RobotSocketSDK(RobotSDK):
         self._socket_threaded_connection = []
         if self._socket_send_per_second is None:
             self._socket_send_per_second = configurations.SOCKET_SEND_PER_SECOND
+
+        if self._socket_send_per_second <= 0:
+            logger.debug("RobotSocketSDK disabled")
+            return
         logger.debug("RobotSocketSDK initialization")
 
         self._thread_socket = threading.Thread(name="socket_thread", target=self._socket_thread_handler, args=())
@@ -88,6 +92,7 @@ class RobotSocketSDK(RobotSDK):
                                 absolute = False
                         self.socket_recv_callback(message, addr)
                     conn.send(json.dumps(self.get_robot_dict_status(absolute=absolute)).encode("utf-8"))
+                    time.sleep(self.sleep_avoid_cpu_waste / self._socket_send_per_second)  # Avoid wasting CPU time
         except Exception as e:
             logger.info("[{}]: connection closed with {}. {}".format(thread_name, addr, e))
             if self.show_log_message:

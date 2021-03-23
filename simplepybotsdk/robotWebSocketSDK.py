@@ -32,6 +32,10 @@ class RobotWebSocketSDK(RobotSDK):
         self.web_socket_threaded_connection = set()
         if self._web_socket_send_per_second is None:
             self._web_socket_send_per_second = configurations.WEB_SOCKET_SEND_PER_SECOND
+
+        if self._web_socket_send_per_second <= 0:
+            logger.debug("RobotWebSocketSDK disabled")
+            return
         logger.debug("RobotWebSocketSDK initialization")
 
         self._thread_web_socket_send_data = None
@@ -73,6 +77,9 @@ class RobotWebSocketSDK(RobotSDK):
         last_time = time.time()
         j_relative = None
         j_absolute = None
+        if self._web_socket_send_per_second <= 0:
+            self._thread_web_socket_send_data = None
+            return
         try:
             while True:
                 if (time.time() - last_time) > (1 / self._web_socket_send_per_second):
@@ -88,6 +95,7 @@ class RobotWebSocketSDK(RobotSDK):
                             client.sendMessage(j_absolute)
                     j_relative = None
                     j_absolute = None
+                    time.sleep(self.sleep_avoid_cpu_waste / self._web_socket_send_per_second)  # Avoid wasting CPU time
         except Exception as e:
             logger.error("[websocket_thread_send_data]: _web_socket_send_data_handler crashed: {}".format(e))
             self._thread_web_socket_send_data = None
