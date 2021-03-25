@@ -1,5 +1,9 @@
 from setuptools import setup
-from simplepybotsdk import __version__ as version
+
+conf_file = open("./simplepybotsdk/configurations.py", "r")
+version = conf_file.readline().split("\"")[1]
+conf_file.close()
+print("Building SimplePyBotSDK version {}".format(version))
 
 setup(
     name='simplepybotsdk',
