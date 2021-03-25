@@ -5,7 +5,7 @@ A simple Python3 library to manage the states of servomotors and sensor in a rob
 Currently, is possible to use websocket to get a real-time JSON dump of robot servomotors and sensors.
 There are also webservices to change servomotors goal angle.
 
-A development dashboard is available here to all servomotors moving: 
+A development dashboard is available here to see all servomotors moving: 
 [SimplePYBotDashboard](https://github.com/vellons/SimplePYBotDashboard).
 
 
