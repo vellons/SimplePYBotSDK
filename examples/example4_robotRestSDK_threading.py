@@ -5,10 +5,6 @@ import threading
 import simplepybotsdk
 
 logging.basicConfig(level=logging.WARNING, filename='log.log', format='%(asctime)s %(levelname)s %(name)s: %(message)s')
-logging.getLogger('websockets.protocol').setLevel(logging.ERROR)
-logging.getLogger('asyncio').setLevel(logging.ERROR)
-logging.getLogger('asyncio.coroutines').setLevel(logging.ERROR)
-logging.getLogger('websockets.server').setLevel(logging.ERROR)
 
 SOCKET_HOST = "0.0.0.0"
 SOCKET_PORT = 65432
