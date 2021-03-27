@@ -109,7 +109,13 @@ class RobotWebSocketSDK(RobotSDK):
         :param message: the message to decode.
         :param addr: tuple with ip and socket of the client connected.
         """
-        data = message.decode("utf-8")
+        if type(message) == bytearray:
+            data = message.decode("utf-8")
+        elif type(message) == str:
+            data = message
+        else:
+            logger.error("[websocket_thread]: fail understand message from: {}: {}".format(addr, message))
+            return
         if len(data) > 0:
             logger.debug("[websocket_thread]: got message from: {}: {}".format(addr, data))
             try:
