@@ -6,9 +6,9 @@ import simplepybotsdk
 
 logging.basicConfig(level=logging.WARNING, filename='log.log', format='%(asctime)s %(levelname)s %(name)s: %(message)s')
 
-SOCKET_HOST = "0.0.0.0"
+SOCKET_HOST = "localhost"  # Use "0.0.0.0" for external connection
 SOCKET_PORT = 65432
-REST_HOST = "0.0.0.0"
+REST_HOST = "localhost"  # Use "0.0.0.0" for external connection
 REST_PORT = 8000
 
 robot = None
