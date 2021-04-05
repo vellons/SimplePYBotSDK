@@ -33,5 +33,7 @@ if __name__ == "__main__":
     robot.go_to_pose("standby", 10, blocking=True)
 
     print("Example4: end")
-    while True:
-        pass
+
+    k = "ciao"
+    while k != "stop":
+        k = input("Type 'stop' to stop: ")

@@ -24,5 +24,7 @@ if __name__ == "__main__":
     print("End position:", mot.get_goal_angle())
 
     print("Example2: end")
-    while True:
-        pass
+
+    k = "ciao"
+    while k != "stop":
+        k = input("Type 'stop' to stop: ")

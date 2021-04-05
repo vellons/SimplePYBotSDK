@@ -62,4 +62,3 @@ if __name__ == "__main__":
         robot.move_point_to_point(ptp1, 3, blocking=True)
         robot.move_point_to_point(ptp2, 3, blocking=True)
         print("Executed in {}".format(time.time() - start_time))
-        pass

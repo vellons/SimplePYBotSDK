@@ -41,5 +41,6 @@ if __name__ == "__main__":
 
     print("Waiting for commands...")
 
-    while True:
-        pass
+    k = "ciao"
+    while k != "stop":
+        k = input("Type 'stop' to stop: ")
