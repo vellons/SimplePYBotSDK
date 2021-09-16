@@ -278,6 +278,33 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "custom/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"seconds\": 2,\r\n    \"command\": \"say_hello\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{server}}/custom/",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"custom",
+						""
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [

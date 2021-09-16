@@ -35,6 +35,7 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
         logger.debug("RobotRESTSDK initialization")
         self.rest_base_url = "/api/v1/robot"
         self.rest_enable_cors = True
+        self.rest_custom_url = "custom"  # Custom POST path
         self._rest_host = rest_host
         self._rest_port = rest_port
         self._thread_rest = None
@@ -75,6 +76,9 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
             config.add_view(self._rest_robot_sensors, route_name="rest_sensors")
             config.add_route("rest_sensors_by_key", self.rest_base_url + "/sensors/{key}/", request_method="GET")
             config.add_view(self._rest_robot_sensors_detail_by_key, route_name="rest_sensors_by_key")
+            config.add_route("rest_custom_post", self.rest_base_url + "/" + self.rest_custom_url + "/",
+                             request_method=["POST", "OPTIONS"])
+            config.add_view(self._rest_robot_custom_post, route_name="rest_custom_post")
 
             if self.rest_enable_cors:
                 config.add_subscriber(add_cors_headers_response_callback, NewRequest)
@@ -207,6 +211,16 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
         if s is None:
             return Response(json_body={"detail": "Not found."}, status=404)
         return Response(json_body=dict(s))
+
+    def _rest_robot_custom_post(self, root, request):
+        if request.method == "OPTIONS":
+            return Response(json_body={})
+        response = self.rest_custom_post(request.json_body)
+        return Response(json_body=response)
+
+    def rest_custom_post(self, body):
+        print("rest_custom_post(): {}".format(body))
+        return {"detail": "Override rest_custom_post() method"}
 
 
 def add_cors_headers_response_callback(event):
