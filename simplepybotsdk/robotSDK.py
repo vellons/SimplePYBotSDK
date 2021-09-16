@@ -30,6 +30,8 @@ class RobotSDK:
         self._motors_point_to_point_check_per_second = motors_point_to_point_check_per_second
         self._thread_motors = None
         self.show_log_message = True
+        self._record_point_to_point = None  # If not None will be the start of recording
+        self._point_to_point_session = []  # Used to record point to point
         self.sleep_avoid_cpu_waste = configurations.SLEEP_AVOID_CPU_WASTE  # Max value is 1
 
         if self._motors_check_per_second is None:
@@ -189,9 +191,9 @@ class RobotSDK:
                 self.move_point_to_point(pose, seconds, blocking)
                 return True
             else:
-                logger.warning("go_to_pose: pose '{}' not found".format(pose_name))
+                logger.error("go_to_pose: pose '{}' not found".format(pose_name))
         else:
-            logger.warning("go_to_pose: no poses found in current configuration")
+            logger.error("go_to_pose: no poses found in current configuration")
         return False
 
     def move_point_to_point(self, motors_goal: dict, seconds: float, blocking: bool = False):
@@ -219,6 +221,10 @@ class RobotSDK:
                 "step": difference / ((seconds * self._motors_point_to_point_check_per_second) if seconds != 0 else 1)
             })
 
+        if self._record_point_to_point is not None:  # If recording save method input
+            self._point_to_point_session.append(
+                (motors_goal, seconds, round(time.time() - self._record_point_to_point, 3)))
+
         number_of_steps = self._motors_point_to_point_check_per_second * seconds if seconds != 0 else 1
         if blocking:
             logger.debug("_exec_point_to_point with {} steps: {}".format(number_of_steps, point_to_point))
@@ -244,6 +250,40 @@ class RobotSDK:
                 # Avoid wasting CPU time
                 time.sleep(
                     (self.sleep_avoid_cpu_waste / self._motors_point_to_point_check_per_second) / self.robot_speed)
+
+    def point_to_point_start_recording(self):
+        """
+        Start to save all point to point position received by the method move_point_to_point() or go_to_pose()
+        """
+        logger.debug("point_to_point_start_recording: start recording")
+        self._point_to_point_session = []
+        self._record_point_to_point = time.time()
+
+    def point_to_point_stop_recording(self) -> list:
+        """
+        Stop recording point to point position and return the list.
+        The list is composed by (motors_goal, duration in second, time_since_start).
+        :return: list of motors with absolute angle, id and key.
+        """
+        logger.debug("point_to_point_stop_recording: Total step recorded: {}".format(len(self._point_to_point_session)))
+        self._record_point_to_point = None
+        return self._point_to_point_session
+
+    def point_to_point_play_recorded(self, animation: list, blocking=True):
+        """
+        Start to save all point to point position received by the method move_point_to_point()
+        :param animation: list of (motors_goal, duration in second, time_since_start).
+        :param blocking: if False start a dedicated thread to handle each point to point movement.
+        """
+        if self._record_point_to_point is not None:
+            logger.error("point_to_point_reward_recorded: you need to stop recording first")
+            return
+
+        previous_time = 0
+        for (motors_goal, seconds, time_since_start) in animation:
+            time.sleep(time_since_start - previous_time)
+            self.move_point_to_point(motors_goal, seconds, blocking=blocking)
+            previous_time = seconds + time_since_start
 
     def get_motors_list_abs_angles(self) -> list:
         """
@@ -306,6 +346,7 @@ class RobotSDK:
 
     def get_robot_dict_status(self, absolute=False) -> dict:
         """
+        :param absolute: angle absolute or relative.
         :return: dict dump of current state of the robot.
         """
         dict_robot = {
