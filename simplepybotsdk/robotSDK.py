@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 import simplepybotsdk.configurations as configurations
 from simplepybotsdk import Sensor, Motor
+from simplepybotsdk.exceptions import RobotSDKInitError
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ class RobotSDK:
         except Exception as e:
             logger.error("Initialization configuration error: exception: {}".format(e))
             print("Initialization configuration error: exception: {}".format(e))
-            exit(-1)
+            raise RobotSDKInitError("Initialization configuration error: exception: {}".format(e))
 
         logger.debug("Robot configuration: {}".format(self.configuration))
         if ("id" in self.configuration) and ("version" in self.configuration) and ("name" in self.configuration):
@@ -64,18 +65,18 @@ class RobotSDK:
         else:
             logger.error("Initialization configuration error: id, version and name are required in configuration file")
             print("Initialization configuration error: id, version and name are required in configuration file")
-            exit(-1)
+            raise RobotSDKInitError("Configuration error: id, version and name are required in configuration file")
 
     def _init_motors(self):
         """Initialize motors from JSON configuration and start thread."""
         if "motors" not in self.configuration:
             logger.error("Initialization configuration error: no motors found in the configuration file")
             print("Initialization configuration error: no motors found in the configuration file")
-            exit(-1)
+            raise RobotSDKInitError("Configuration error: no motors found in the configuration file")
         if "motors_type" not in self.configuration:
             logger.error("Initialization configuration error: no motors_type found in the configuration file")
             print("Initialization configuration error: no motors_type found in the configuration file")
-            exit(-1)
+            raise RobotSDKInitError("Configuration error: no motors_type found in the configuration file")
         for key, m in self.configuration["motors"].items():
             self.motors.append(Motor(
                 identifier=m["id"],

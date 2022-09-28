@@ -1,0 +1,2 @@
+class RobotSDKInitError(Exception):
+    pass
