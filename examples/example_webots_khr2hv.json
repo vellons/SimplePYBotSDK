@@ -2,6 +2,7 @@
   "id": "webots_khr2hv_v1",
   "version": "0.1",
   "name": "Example robot configuration for Webots",
+  "enable_twist_controller": true,
   "motors": {
     "head_z": {
       "id": "Head",

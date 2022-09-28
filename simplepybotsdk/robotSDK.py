@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 import simplepybotsdk.configurations as configurations
 from simplepybotsdk import Sensor, Motor
+from simplepybotsdk.twist import Twist
 from simplepybotsdk.exceptions import RobotSDKInitError
 
 logger = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ class RobotSDK:
         self.configuration = None
         self.sensors = []
         self.motors = []
+        self.twist = None  # ROS like object to control movements for a robot with wheels
         self.robot_speed = robot_speed
         self._motors_check_per_second = motors_check_per_second
         self._motors_point_to_point_check_per_second = motors_point_to_point_check_per_second
@@ -62,6 +64,7 @@ class RobotSDK:
         if ("id" in self.configuration) and ("version" in self.configuration) and ("name" in self.configuration):
             self._init_sensors()
             self._init_motors()
+            self._init_twist_controller()
         else:
             logger.error("Initialization configuration error: id, version and name are required in configuration file")
             print("Initialization configuration error: id, version and name are required in configuration file")
@@ -143,6 +146,15 @@ class RobotSDK:
                 offset=s["offset"]
             ))
         logger.debug("Sensors initialization completed. Total sensors: {} {}".format(len(self.sensors), self.sensors))
+
+    def _init_twist_controller(self):
+        """Initialize twist object (like ROS for movements)."""
+        if "enable_twist_controller" not in self.configuration:
+            logger.debug("No enable_twist_controller flag in the configuration file")
+            return
+        if self.configuration["enable_twist_controller"] is True:
+            self.twist = Twist(identifier='twist1', key='twist1')
+        logger.debug("Twist initialization completed. {}".format(self.twist))
 
     def get_motor(self, key: str) -> Motor:
         """
@@ -353,6 +365,7 @@ class RobotSDK:
         dict_robot = {
             "motors": self.get_motors_list_abs_angles() if absolute else self.get_motors_list_relative_angles(),
             "sensors": self.get_sensors_list(),
+            "twist": dict(self.twist),
             "format": "absolute" if absolute else "relative",
             "sdk": self.get_sdk_infos(),
             "system": self.get_system_infos()
