@@ -8,6 +8,7 @@ from wsgiref.simple_server import make_server
 import simplepybotsdk.configurations as configurations
 from simplepybotsdk.robotWebSocketSDK import RobotWebSocketSDK as RobotWebSocketSDK
 from simplepybotsdk.robotSocketSDK import RobotSocketSDK as RobotSocketSDK
+from simplepybotsdk.twist import TwistVector
 
 logger = logging.getLogger(__name__)
 SOCKET_AS_WEB_SOCKET = os.getenv('SOCKET_AS_WEB_SOCKET', True)
@@ -76,6 +77,10 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
             config.add_view(self._rest_robot_sensors, route_name="rest_sensors")
             config.add_route("rest_sensors_by_key", self.rest_base_url + "/sensors/{key}/", request_method="GET")
             config.add_view(self._rest_robot_sensors_detail_by_key, route_name="rest_sensors_by_key")
+            config.add_route("rest_twist", self.rest_base_url + "/twist/", request_method="GET")
+            config.add_view(self._rest_robot_twist, route_name="rest_twist")
+            config.add_route("rest_move_twist", self.rest_base_url + "/twist/", request_method=["POST", "OPTIONS"])
+            config.add_view(self._rest_robot_move_twist, route_name="rest_move_twist")
             config.add_route("rest_custom_post", self.rest_base_url + "/" + self.rest_custom_url + "/",
                              request_method=["POST", "OPTIONS"])
             config.add_view(self._rest_robot_custom_post, route_name="rest_custom_post")
@@ -211,6 +216,24 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
         if s is None:
             return Response(json_body={"detail": "Not found."}, status=404)
         return Response(json_body=dict(s))
+
+    def _rest_robot_twist(self, root, request):
+        return Response(json_body=self.get_twist())
+
+    def _rest_robot_move_twist(self, root, request):
+        if request.method == "OPTIONS":
+            return Response(json_body={})
+        try:
+            self.set_twist(
+                linear=TwistVector(x=request.json_body["linear"]["x"], y=request.json_body["linear"]["y"],
+                                   z=request.json_body["linear"]["z"]),
+                angular=TwistVector(x=request.json_body["angular"]["x"], y=request.json_body["angular"]["y"],
+                                    z=request.json_body["angular"]["z"])
+            )
+            return Response(json_body=self.get_twist())
+        except Exception as e:
+            logger.error("[rest_thread]: _rest_robot_move_twist: {}".format(e))
+            return Response(json_body={"detail": "Bad request. You need to format the twist properly"}, status=400)
 
     def _rest_robot_custom_post(self, root, request):
         if request.method == "OPTIONS":

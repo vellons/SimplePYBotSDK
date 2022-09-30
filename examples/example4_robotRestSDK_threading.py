@@ -1,46 +1,46 @@
 import logging
 import time
 import threading
+import math
 
 import simplepybotsdk
 
 logging.basicConfig(level=logging.WARNING, filename='log.log', format='%(asctime)s %(levelname)s %(name)s: %(message)s')
 
-SOCKET_HOST = "localhost"  # Use "0.0.0.0" for external connection
-SOCKET_PORT = 65432
-REST_HOST = "localhost"  # Use "0.0.0.0" for external connection
-REST_PORT = 8000
 
-robot = None
-thread_communications = None
+class RobotExample(simplepybotsdk.RobotRESTSDK):
+    def __init__(self):
+        super().__init__(
+            config_path="example_webots_khr2hv.json",
+            socket_host="0.0.0.0",  # Use "0.0.0.0" for external connection,
+            socket_port=65432,
+            rest_host="0.0.0.0",  # Use "0.0.0.0" for external connection,
+            rest_port=8000
+        )
+        self.rest_configure()
+        self.rest_serve_forever()
+        print("{} ready.".format(self.configuration["name"]))
 
+        # Start robot handler thread
+        threading.Thread(target=self.robot_handler, args=(), daemon=True).start()
 
-def communication_handler():
-    time.sleep(5)
-    while True:
-        print(robot.get_robot_dict_status())
+    def robot_handler(self):
         time.sleep(3)
+        while True:
+            print(self.get_robot_dict_status())
+            time.sleep(.3)
+            if self.get_twist() is not None:  # ROS like twist object to angular direction and velocity
+                x = self.twist.linear.x
+                y = self.twist.linear.y
+                theta_rad = math.atan2(y, x)
+                theta_deg = (theta_rad / math.pi * 180) - 90
+                p = math.sqrt((0 - y) ** 2 + (0 - x) ** 2)  # Pythagorean theorem
+                print("Angle:{:04} - Speed:{:.2f}".format(int(theta_deg), p))
 
 
 if __name__ == "__main__":
     print("simplepybotsdk version is", simplepybotsdk.__version__)
-    robot = simplepybotsdk.RobotRESTSDK(
-        config_path="example_webots_khr2hv.json",
-        socket_host=SOCKET_HOST,
-        socket_port=SOCKET_PORT,
-        rest_host=REST_HOST,
-        rest_port=REST_PORT,
-        robot_speed=1
-    )
-    robot.rest_configure()
-    robot.rest_serve_forever()
-
-    # Start communication thread
-    thread_communications = threading.Thread(target=communication_handler, args=())
-    thread_communications.daemon = True
-    thread_communications.start()
-
-    print("Waiting for commands...")
+    robot = RobotExample()
 
     k = "ciao"
     while k != "stop":

@@ -14,7 +14,7 @@ class TwistVector:
         """
         self.x = x
         self.y = y
-        self.z = x
+        self.z = z
 
     def __iter__(self):
         for key in self.__dict__:

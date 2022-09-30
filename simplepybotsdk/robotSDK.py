@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 import simplepybotsdk.configurations as configurations
 from simplepybotsdk import Sensor, Motor
-from simplepybotsdk.twist import Twist
+from simplepybotsdk.twist import Twist, TwistVector
 from simplepybotsdk.exceptions import RobotSDKInitError
 
 logger = logging.getLogger(__name__)
@@ -339,6 +339,26 @@ class RobotSDK:
             })
         return sensors
 
+    def set_twist(self, linear: TwistVector, angular: TwistVector):
+        """
+        Start to save all point to point position received by the method move_point_to_point()
+        :param linear: TwistVector object with new x, y, z.
+        :param angular: TwistVector object with new x, y, z.
+        """
+        self.twist.linear = linear
+        self.twist.angular = angular
+
+    def get_twist(self):
+        """
+        :return: dict of twist with linear and angular of None.
+        """
+        if self.twist is None:
+            return None
+        return {
+            "linear": dict(self.twist.linear),
+            "angular": dict(self.twist.angular)
+        }
+
     def get_sdk_infos(self) -> dict:
         """
         :return: dict of sdk infos.
@@ -357,7 +377,7 @@ class RobotSDK:
             "timestamp": datetime.now().isoformat()
         }
 
-    def get_robot_dict_status(self, absolute=False) -> dict:
+    def get_robot_dict_status(self, absolute: bool = False) -> dict:
         """
         :param absolute: angle absolute or relative.
         :return: dict dump of current state of the robot.
@@ -365,7 +385,7 @@ class RobotSDK:
         dict_robot = {
             "motors": self.get_motors_list_abs_angles() if absolute else self.get_motors_list_relative_angles(),
             "sensors": self.get_sensors_list(),
-            "twist": dict(self.twist),
+            "twist": self.get_twist() if self.twist else None,
             "format": "absolute" if absolute else "relative",
             "sdk": self.get_sdk_infos(),
             "system": self.get_system_infos()

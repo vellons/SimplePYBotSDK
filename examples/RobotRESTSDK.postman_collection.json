@@ -280,6 +280,51 @@
 			"response": []
 		},
 		{
+			"name": "twist/",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/twist/",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"twist",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "twist/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"linear\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0.5,\r\n        \"z\": 0.0\r\n    },\r\n    \"angular\": {\r\n        \"x\": 0.0,\r\n        \"y\": 0.0,\r\n        \"z\": 0.0\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{server}}/twist/",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"twist",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "custom/",
 			"request": {
 				"method": "POST",
