@@ -41,6 +41,24 @@
 			"response": []
 		},
 		{
+			"name": "motion/",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/motion/",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"motion",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "status/",
 			"request": {
 				"method": "GET",
@@ -181,6 +199,52 @@
 					"path": [
 						"motors",
 						"head_z",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "poses/",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/poses/",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"poses",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "poses/{key}/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"l_elbow_y\": 90,\n    \"r_elbow_y\": 90\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{server}}/poses/test1/",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"poses",
+						"test1",
 						""
 					]
 				}

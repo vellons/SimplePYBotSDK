@@ -1,0 +1,132 @@
+{
+  "id": "webots_khr2hv_v1",
+  "version": "0.1",
+  "poses": {
+    "standby": {
+      "head_z": 0,
+      "l_shoulder_x": 0,
+      "r_shoulder_x": 0,
+      "l_shoulder_y": 0,
+      "r_shoulder_y": 0,
+      "l_elbow_y": 0,
+      "r_elbow_y": 0
+    },
+    "t": {
+      "head_z": 0,
+      "l_shoulder_x": -90,
+      "r_shoulder_x": -90,
+      "l_shoulder_y": 90,
+      "r_shoulder_y": 90,
+      "l_elbow_y": 0,
+      "r_elbow_y": 0
+    },
+    "hello_left1": {
+      "l_shoulder_x": 0,
+      "l_shoulder_y": 90,
+      "l_elbow_y": 100
+    },
+    "hello_left2": {
+      "l_shoulder_x": 0,
+      "l_shoulder_y": 90,
+      "l_elbow_y": 70
+    },
+    "hello_right1": {
+      "r_shoulder_x": 0,
+      "r_shoulder_y": 90,
+      "r_elbow_y": 100
+    },
+    "hello_right2": {
+      "r_shoulder_x": 0,
+      "r_shoulder_y": 90,
+      "r_elbow_y": 70
+    }
+  },
+  "performances": {
+    "say_hello_left": {
+      "description": "Say hello with the left arm",
+      "steps": [
+        {
+          "type": "pose",
+          "seconds": 2,
+          "to": "hello_left1"
+        },
+        {
+          "type": "pose",
+          "seconds": 0.5,
+          "to": "hello_left2",
+          "delay": 1
+        },
+        {
+          "type": "pose",
+          "seconds": 0.5,
+          "to": "hello_left1"
+        },
+        {
+          "type": "pose",
+          "seconds": 0.5,
+          "to": "hello_left2"
+        }
+      ]
+    },
+    "say_hello_right": {
+      "description": "Say hello with the right arm",
+      "steps": [
+        {
+          "type": "pose",
+          "seconds": 2,
+          "to": "hello_right1"
+        },
+        {
+          "type": "pose",
+          "seconds": 0.5,
+          "to": "hello_right2",
+          "delay": 1
+        },
+        {
+          "type": "pose",
+          "seconds": 0.5,
+          "to": "hello_right1"
+        },
+        {
+          "type": "pose",
+          "seconds": 0.5,
+          "to": "hello_right2"
+        }
+      ]
+    },
+    "example": {
+      "description": "Example of a performance with a performance that call other performance",
+      "steps": [
+        {
+          "type": "pose",
+          "seconds": 2,
+          "to": "standby",
+          "delay": 10
+        },
+        {
+          "type": "performance",
+          "to": "say_hello_left",
+          "delay": 5
+        },
+        {
+          "type": "pose",
+          "seconds": 5,
+          "to": "standby"
+        },
+        {
+          "type": "multiple-performance",
+          "to": [
+            "say_hello_left",
+            "say_hello_left"
+          ],
+          "delay": 15
+        },
+        {
+          "type": "pose",
+          "seconds": 5,
+          "to": "standby"
+        }
+      ]
+    }
+  }
+}

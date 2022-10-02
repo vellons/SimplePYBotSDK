@@ -6,6 +6,7 @@ from pyramid.response import Response
 from pyramid.events import NewRequest
 from wsgiref.simple_server import make_server
 import simplepybotsdk.configurations as configurations
+from simplepybotsdk.exceptions import RobotKeyError
 from simplepybotsdk.robotWebSocketSDK import RobotWebSocketSDK as RobotWebSocketSDK
 from simplepybotsdk.robotSocketSDK import RobotSocketSDK as RobotSocketSDK
 from simplepybotsdk.twist import TwistVector
@@ -50,8 +51,11 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
         with Configurator() as config:
             config.add_route("hello_world", self.rest_base_url + "/")
             config.add_view(self._rest_hello_world, route_name="hello_world")
-            config.add_route("rest_configuration", self.rest_base_url + "/configuration/", request_method="GET")
+            config.add_route("rest_configuration", self.rest_base_url + "/configuration/",
+                             request_method=["GET", "OPTIONS"])
             config.add_view(self._rest_robot_configuration, route_name="rest_configuration")
+            config.add_route("rest_motion", self.rest_base_url + "/motion/", request_method="GET")
+            config.add_view(self._rest_robot_motion, route_name="rest_motion")
             config.add_route("rest_status", self.rest_base_url + "/status/", request_method="GET")
             config.add_view(self._rest_robot_status, route_name="rest_status")
             config.add_route("rest_status_abs", self.rest_base_url + "/status/absolute/", request_method="GET")
@@ -70,6 +74,10 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
             config.add_route("rest_go_to_pose", self.rest_base_url + "/go-to-pose/{key}/",
                              request_method=["POST", "OPTIONS"])
             config.add_view(self._rest_robot_go_to_pose, route_name="rest_go_to_pose")
+            config.add_route("rest_poses", self.rest_base_url + "/poses/", request_method="GET")
+            config.add_view(self._rest_robot_poses, route_name="rest_poses")
+            config.add_route("rest_new_pose", self.rest_base_url + "/poses/{key}/", request_method=["POST", "OPTIONS"])
+            config.add_view(self._rest_robot_new_poses, route_name="rest_new_pose")
             config.add_route("rest_move_point_to_point", self.rest_base_url + "/move-point-to-point/",
                              request_method=["POST", "OPTIONS"])
             config.add_view(self._rest_robot_move_point_to_point, route_name="rest_move_point_to_point")
@@ -123,7 +131,14 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
         return Response(json_body={"detail": detail})
 
     def _rest_robot_configuration(self, root, request):
+        if request.method == "OPTIONS":
+            return Response(json_body={})
         return Response(json_body=self.configuration)
+
+    def _rest_robot_motion(self, root, request):
+        if self.motion_configuration is None:
+            return Response(json_body={"detail": "Motion configuration not found."}, status=404)
+        return Response(json_body=self.motion_configuration)
 
     def _rest_robot_status(self, root, request):
         return Response(json_body=self.get_robot_dict_status())
@@ -170,6 +185,22 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
         except Exception as e:
             logger.error("[rest_thread]: robot_motor_patch_by_key: {}".format(e))
             return Response(json_body={"detail": "Bad request. Use goal_angle key"}, status=400)
+
+    def _rest_robot_poses(self, root, request):
+        if self.poses is None:
+            return Response(json_body={"detail": "Not poses found"}, status=404)
+        return Response(json_body=dict(self.poses))
+
+    def _rest_robot_new_poses(self, root, request):
+        if request.method == "OPTIONS":
+            return Response(json_body={})
+        pose_name = request.matchdict["key"]
+        pose = dict(request.json_body)
+        try:
+            self.create_pose(pose_name, pose)
+        except RobotKeyError as e:
+            return Response(json_body={"detail": str(e)}, status=400)
+        return Response(json_body=pose)
 
     def _rest_robot_go_to_pose(self, root, request):
         if request.method == "OPTIONS":
@@ -218,7 +249,7 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
         return Response(json_body=dict(s))
 
     def _rest_robot_twist(self, root, request):
-        return Response(json_body=self.get_twist())
+        return Response(json_body=dict(self.get_twist()))
 
     def _rest_robot_move_twist(self, root, request):
         if request.method == "OPTIONS":
@@ -230,7 +261,7 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
                 angular=TwistVector(x=request.json_body["angular"]["x"], y=request.json_body["angular"]["y"],
                                     z=request.json_body["angular"]["z"])
             )
-            return Response(json_body=self.get_twist())
+            return Response(json_body=dict(self.get_twist()))
         except Exception as e:
             logger.error("[rest_thread]: _rest_robot_move_twist: {}".format(e))
             return Response(json_body={"detail": "Bad request. You need to format the twist properly"}, status=400)
@@ -251,7 +282,7 @@ def add_cors_headers_response_callback(event):
         response.headers.update({
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET,POST,PATCH,OPTIONS",
-            "Access-Control-Allow-Headers": "Origin, Content-Type, Accept",
+            "Access-Control-Allow-Headers": "*",
             "Access-Control-Max-Age": "600",
             "SimplePYBotSDK": configurations.VERSION
         })

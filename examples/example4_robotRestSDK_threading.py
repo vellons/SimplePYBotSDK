@@ -28,19 +28,20 @@ class RobotExample(simplepybotsdk.RobotRESTSDK):
         time.sleep(3)
         while True:
             print(self.get_robot_dict_status())
-            time.sleep(.3)
+            time.sleep(3)
             if self.get_twist() is not None:  # ROS like twist object to angular direction and velocity
                 x = self.twist.linear.x
                 y = self.twist.linear.y
                 theta_rad = math.atan2(y, x)
                 theta_deg = (theta_rad / math.pi * 180) - 90
                 p = math.sqrt((0 - y) ** 2 + (0 - x) ** 2)  # Pythagorean theorem
-                print("Angle:{:04} - Speed:{:.2f}".format(int(theta_deg), p))
+                # print("Angle:{:04} - Speed:{:.2f}".format(int(theta_deg), p))
 
 
 if __name__ == "__main__":
     print("simplepybotsdk version is", simplepybotsdk.__version__)
     robot = RobotExample()
+    print("Poses {}".format(robot.poses))
 
     k = "ciao"
     while k != "stop":

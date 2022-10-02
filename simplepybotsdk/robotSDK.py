@@ -6,7 +6,7 @@ from datetime import datetime
 import simplepybotsdk.configurations as configurations
 from simplepybotsdk import Sensor, Motor
 from simplepybotsdk.twist import Twist, TwistVector
-from simplepybotsdk.exceptions import RobotSDKInitError
+from simplepybotsdk.exceptions import RobotSDKInitError, RobotKeyError
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +25,12 @@ class RobotSDK:
         logger.info("RobotSDK version {} initialization".format(configurations.VERSION))
         self.config_path = None
         self.configuration = None
+        self.motion_path = None
+        self.motion_configuration = None
         self.sensors = []
         self.motors = []
         self.twist = None  # ROS like object to control movements for a robot with wheels
+        self.poses = None
         self.robot_speed = robot_speed
         self._motors_check_per_second = motors_check_per_second
         self._motors_point_to_point_check_per_second = motors_point_to_point_check_per_second
@@ -44,7 +47,7 @@ class RobotSDK:
 
         self._init_robot(config_path)
 
-    def _init_robot(self, config_path):
+    def _init_robot(self, config_path: str):
         """
         Read the JSON file configuration from path.
         Then starts robot's component initialization.
@@ -65,6 +68,7 @@ class RobotSDK:
             self._init_sensors()
             self._init_motors()
             self._init_twist_controller()
+            self._init_motion()
         else:
             logger.error("Initialization configuration error: id, version and name are required in configuration file")
             print("Initialization configuration error: id, version and name are required in configuration file")
@@ -156,6 +160,23 @@ class RobotSDK:
             self.twist = Twist(identifier='twist1', key='twist1')
         logger.debug("Twist initialization completed. {}".format(self.twist))
 
+    def _init_motion(self):
+        """Initialize motion data."""
+        if "poses" in self.configuration:
+            self.poses = self.configuration["poses"]
+            logger.debug("Loaded {} poses from configuration".format(len(self.poses)))
+        if "motion_file" in self.configuration:
+            self.load_motion_from_file(self.configuration["motion_file"])
+        elif self.motion_path is None:
+            # Motion file probably not exist
+            self.motion_path = self.config_path.replace(".json", "_motion.json")
+            self.motion_configuration = {
+                "id": self.configuration["id"],
+                "version": self.configuration["version"],
+                "poses": self.poses if self.poses is not None else {},
+                "performances": {}
+            }
+
     def get_motor(self, key: str) -> Motor:
         """
         :param key: key to use to find the motor.
@@ -188,6 +209,77 @@ class RobotSDK:
         found = [s for s in self.sensors if s.id == identifier]
         return found[0] if len(found) == 1 else None
 
+    def set_twist(self, linear: TwistVector, angular: TwistVector):
+        """
+        Start to save all point to point position received by the method move_point_to_point()
+        :param linear: TwistVector object with new x, y, z.
+        :param angular: TwistVector object with new x, y, z.
+        """
+        self.twist.linear = linear
+        self.twist.angular = angular
+
+    def get_twist(self):
+        """
+        :return: dict of twist with linear and angular of None.
+        """
+        return self.twist if self.twist is not None else None
+
+    def load_motion_from_file(self, path: str):
+        """
+        Read the JSON file performances and poses configuration from path.
+        :param path: SimplePYBotSDK json performances file path.
+        """
+        logger.debug("Reading performances from file: {}".format(path))
+        self.motion_path = path
+        try:
+            with open(self.motion_path) as f:
+                self.motion_configuration = json.load(f)
+                if "poses" in self.motion_configuration:
+                    if type(self.poses) == dict:
+                        x = self.poses.copy()
+                        x.update(self.motion_configuration["poses"])
+                        self.poses = x
+                    else:
+                        self.poses = self.motion_configuration["poses"]
+                    logger.debug("Loaded {} poses from motion configuration".format(len(self.poses)))
+        except Exception as e:
+            logger.error("Motion configuration error: exception: {}".format(e))
+            print("Motion configuration error: exception: {}".format(e))
+            raise RobotSDKInitError("Motion configuration error: exception: {}".format(e))
+
+    def save_motion_file(self, path: str = None):
+        """
+        Write the JSON file performances and poses configuration to path.
+        :param path: SimplePYBotSDK json performances file path.
+        """
+        if path is None:
+            path = self.motion_path
+        logger.info("save_motion_file: saving to file {}".format(path))
+        with open(path, "w") as f:  # Motion path from config file or new one created in _init_motion
+            f.write(json.dumps(self.motion_configuration, indent=2))
+
+    def create_pose(self, pose_name: str, pose_dict: dict, save_to_motion_file: bool = True):
+        """
+        Method to create a new pose.
+        :param pose_name: the name of the new pose.
+        :param pose_dict: dict of {"key": goal_angle, "key": goal_angle}.
+        :param save_to_motion_file: if True will edit the motion file or create if not exist.
+        """
+        if pose_name in self.poses:
+            logger.warning("create_pose: motor with key '{}' not exist".format(pose_name))
+            raise RobotKeyError("create_pose: pose with key '{}' already exist".format(pose_name))
+
+        for item in pose_dict:
+            m = self.get_motor(item)
+            if m is None:
+                logger.warning("create_pose: motor with key '{}' not exist".format(item))
+                raise RobotKeyError("create_pose: motor with key '{}' not exist".format(item))
+        self.poses[pose_name] = pose_dict
+        self.motion_configuration["poses"] = self.poses
+        logger.info("create_pose: new pose with key '{}' added. {}".format(pose_name, pose_dict))
+        if save_to_motion_file:
+            self.save_motion_file()
+
     def go_to_pose(self, pose_name: str, seconds: float = 0, blocking: bool = False):
         """
         Method to move the robot in a specific pose defined in the configuration file.
@@ -195,9 +287,9 @@ class RobotSDK:
         :param seconds: duration in seconds of the simultaneous movement.
         :param blocking: if False start a dedicated thread to handle the movements.
         """
-        if "poses" in self.configuration:
-            if pose_name in self.configuration["poses"]:
-                pose = self.configuration["poses"][pose_name]
+        if self.poses is not None:
+            if pose_name in self.poses:
+                pose = self.poses[pose_name]
                 logger.info("go_to_pose: {}".format(pose_name))
                 if seconds == 0:
                     blocking = True  # Avoid starting the thread
@@ -206,7 +298,7 @@ class RobotSDK:
             else:
                 logger.error("go_to_pose: pose '{}' not found".format(pose_name))
         else:
-            logger.error("go_to_pose: no poses found in current configuration")
+            logger.error("go_to_pose: no poses loaded")
         return False
 
     def move_point_to_point(self, motors_goal: dict, seconds: float, blocking: bool = False):
@@ -339,26 +431,6 @@ class RobotSDK:
             })
         return sensors
 
-    def set_twist(self, linear: TwistVector, angular: TwistVector):
-        """
-        Start to save all point to point position received by the method move_point_to_point()
-        :param linear: TwistVector object with new x, y, z.
-        :param angular: TwistVector object with new x, y, z.
-        """
-        self.twist.linear = linear
-        self.twist.angular = angular
-
-    def get_twist(self):
-        """
-        :return: dict of twist with linear and angular of None.
-        """
-        if self.twist is None:
-            return None
-        return {
-            "linear": dict(self.twist.linear),
-            "angular": dict(self.twist.angular)
-        }
-
     def get_sdk_infos(self) -> dict:
         """
         :return: dict of sdk infos.
@@ -385,7 +457,7 @@ class RobotSDK:
         dict_robot = {
             "motors": self.get_motors_list_abs_angles() if absolute else self.get_motors_list_relative_angles(),
             "sensors": self.get_sensors_list(),
-            "twist": self.get_twist() if self.twist else None,
+            "twist": dict(self.get_twist()),
             "format": "absolute" if absolute else "relative",
             "sdk": self.get_sdk_infos(),
             "system": self.get_system_infos()
@@ -393,7 +465,7 @@ class RobotSDK:
         return dict_robot
 
     def __str__(self):
-        return "<RobotSDK {} with configuration: {}>".format(self.configuration["id"], self.configuration)
+        return "<RobotSDK {}>".format(self.configuration["id"])
 
     def __repr__(self):
         return self.__str__()
