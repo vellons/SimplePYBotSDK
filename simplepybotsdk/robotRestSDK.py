@@ -54,7 +54,7 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
             config.add_route("rest_configuration", self.rest_base_url + "/configuration/",
                              request_method=["GET", "OPTIONS"])
             config.add_view(self._rest_robot_configuration, route_name="rest_configuration")
-            config.add_route("rest_motion", self.rest_base_url + "/motion/", request_method="GET")
+            config.add_route("rest_motion", self.rest_base_url + "/motion/", request_method=["GET", "OPTIONS"])
             config.add_view(self._rest_robot_motion, route_name="rest_motion")
             config.add_route("rest_status", self.rest_base_url + "/status/", request_method="GET")
             config.add_view(self._rest_robot_status, route_name="rest_status")
@@ -136,6 +136,8 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
         return Response(json_body=self.configuration)
 
     def _rest_robot_motion(self, root, request):
+        if request.method == "OPTIONS":
+            return Response(json_body={})
         if self.motion_configuration is None:
             return Response(json_body={"detail": "Motion configuration not found."}, status=404)
         return Response(json_body=self.motion_configuration)
