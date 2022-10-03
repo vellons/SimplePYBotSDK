@@ -29,7 +29,7 @@ class RobotExample(simplepybotsdk.RobotRESTSDK):
         while True:
             print(self.get_robot_dict_status())
             time.sleep(3)
-            if self.get_twist() is not None:  # ROS like twist object to angular direction and velocity
+            if self.twist is not None:  # ROS like twist object to angular direction and velocity
                 x = self.twist.linear.x
                 y = self.twist.linear.y
                 theta_rad = math.atan2(y, x)

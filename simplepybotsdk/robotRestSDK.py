@@ -216,7 +216,7 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
         if result:
             return Response(json_body={"detail": "Going to pose {} in {} seconds".format(key, seconds)})
         return Response(
-            json_body={"detail": "Something went wrong. See all available pose with /configuration/"}, status=400)
+            json_body={"detail": "Something went wrong. See all available pose with /poses/"}, status=400)
 
     def _rest_robot_move_point_to_point(self, root, request):
         if request.method == "OPTIONS":
@@ -249,19 +249,23 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
         return Response(json_body=dict(s))
 
     def _rest_robot_twist(self, root, request):
-        return Response(json_body=dict(self.get_twist()))
+        if self.twist is None:
+            return Response(json_body={"detail": "Twist not enabled. Add enable_twist_controller in conf"}, status=404)
+        return Response(json_body=self.get_twist_dict())
 
     def _rest_robot_move_twist(self, root, request):
         if request.method == "OPTIONS":
             return Response(json_body={})
         try:
+            if self.twist is None:
+                return Response(json_body={"detail": "Twist not enabled"}, status=404)
             self.set_twist(
                 linear=TwistVector(x=request.json_body["linear"]["x"], y=request.json_body["linear"]["y"],
                                    z=request.json_body["linear"]["z"]),
                 angular=TwistVector(x=request.json_body["angular"]["x"], y=request.json_body["angular"]["y"],
                                     z=request.json_body["angular"]["z"])
             )
-            return Response(json_body=dict(self.get_twist()))
+            return Response(json_body=self.get_twist_dict())
         except Exception as e:
             logger.error("[rest_thread]: _rest_robot_move_twist: {}".format(e))
             return Response(json_body={"detail": "Bad request. You need to format the twist properly"}, status=400)

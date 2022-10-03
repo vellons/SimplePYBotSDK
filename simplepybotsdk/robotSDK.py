@@ -218,11 +218,11 @@ class RobotSDK:
         self.twist.linear = linear
         self.twist.angular = angular
 
-    def get_twist(self):
+    def get_twist_dict(self) -> dict:
         """
         :return: dict of twist with linear and angular of None.
         """
-        return self.twist if self.twist is not None else None
+        return dict(self.twist) if self.twist is not None else None
 
     def load_motion_from_file(self, path: str):
         """
@@ -457,7 +457,7 @@ class RobotSDK:
         dict_robot = {
             "motors": self.get_motors_list_abs_angles() if absolute else self.get_motors_list_relative_angles(),
             "sensors": self.get_sensors_list(),
-            "twist": dict(self.get_twist()),
+            "twist": self.get_twist_dict(),
             "format": "absolute" if absolute else "relative",
             "sdk": self.get_sdk_infos(),
             "system": self.get_system_infos()
