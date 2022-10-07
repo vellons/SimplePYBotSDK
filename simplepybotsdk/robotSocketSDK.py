@@ -4,8 +4,11 @@ import json
 import time
 import socket
 from select import select
+import traceback
+
 import simplepybotsdk.configurations as configurations
 from simplepybotsdk.robotSDK import RobotSDK as RobotSDK
+from simplepybotsdk.parserJSONCommands import ParserJSONCommands
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +32,7 @@ class RobotSocketSDK(RobotSDK):
         self._socket_host = socket_host
         self._socket_port = socket_port
         self._socket_send_per_second = socket_send_per_second
+        self.message_parsers = []
         self._socket_threaded_connection = []
         if self._socket_send_per_second is None:
             self._socket_send_per_second = configurations.SOCKET_SEND_PER_SECOND
@@ -36,6 +40,9 @@ class RobotSocketSDK(RobotSDK):
         if self._socket_send_per_second <= 0:
             logger.debug("RobotSocketSDK disabled")
             return
+        if "enable_parser_json_commands" in self.configuration and self.configuration["enable_parser_json_commands"]:
+            self.message_parsers.append(ParserJSONCommands)
+
         logger.debug("RobotSocketSDK initialization")
 
         self._thread_socket = threading.Thread(name="socket_thread", target=self._socket_thread_handler, args=())
@@ -45,7 +52,7 @@ class RobotSocketSDK(RobotSDK):
     def _socket_thread_handler(self):
         """
         Thread method to accept incoming socket connections.
-        This thread create a new thread for every single connection request.
+        This thread creates a new thread for every single connection request.
         """
         logger.debug(
             "[socket_thread]: start listening for connections on {}".format((self._socket_host, self._socket_port)))
@@ -66,7 +73,7 @@ class RobotSocketSDK(RobotSDK):
     def _socket_thread_connection_handler(self, conn, addr):
         """
         Dedicated thread to handle a single connection.
-        This thread send to the client a JSON dump of current state of the robot.
+        This thread sends to the client a JSON dump of current state of the robot.
         :param conn: socket connection instance.
         :param addr: tuple with ip and socket of the client connected.
         """
@@ -90,8 +97,19 @@ class RobotSocketSDK(RobotSDK):
                             if f == "relative":
                                 logger.debug("[{}]: connection: {} now use format: {}".format(thread_name, addr, f))
                                 absolute = False
-                        self.socket_recv_callback(message, addr)
-                    conn.send(json.dumps(self.get_robot_dict_status(absolute=absolute)).encode("utf-8"))
+                        self.socket_recv_callback(message, addr, conn)
+                        for mp in self.message_parsers:
+                            mp_instance = mp(self)
+                            response = mp_instance(message)
+                            if response is not None:
+                                conn.send(json.dumps(response).encode("utf-8"))
+                    conn.send(json.dumps({
+                        "type": "R2C",
+                        "data": {
+                            "area": "status",
+                            "action": "live_status",
+                            "value": self.get_robot_dict_status(absolute=absolute)
+                        }}).encode("utf-8"))
                     time.sleep(self.sleep_avoid_cpu_waste / self._socket_send_per_second)  # Avoid wasting CPU time
         except Exception as e:
             logger.info("[{}]: connection closed with {}. {}".format(thread_name, addr, e))
@@ -121,13 +139,15 @@ class RobotSocketSDK(RobotSDK):
                         j = json.loads(data)
                         return True, j
                     except Exception as e:
+                        logger.error(traceback.format_exc())
                         logger.error("[{}]: fail to decode message from: {}: {}. {}".format(thread_name, addr, data, e))
         return False, None
 
-    def socket_recv_callback(self, message: dict, addr: tuple):
+    def socket_recv_callback(self, message: dict, addr: tuple, socket_conn):
         """
         Method called when a message is received. Override this to parse message.
         :param message: json message received.
         :param addr: tuple with ip and socket of the client that send the message.
+        :param socket_conn: the socket connection.
         """
         pass

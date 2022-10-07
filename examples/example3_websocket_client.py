@@ -11,6 +11,11 @@ async def hello():
     # await websocket.send('{"socket": {"format": "absolute"}}'.encode())
     # await websocket.send('{"socket": {"format": "block"}}'.encode())
 
+    # Try with example8!
+    await websocket.send('{"ping": "pong"}'.encode())  # Try with example8
+    await websocket.send('{"type": "C2R", "data": {"area": "config", "action": "get_configuration"}}'.encode())
+    # await websocket.send('{"ciao": {"hello": "hola"}}'.encode())
+
     while True:
         message = await websocket.recv()
         print(message)

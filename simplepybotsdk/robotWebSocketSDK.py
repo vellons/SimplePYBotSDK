@@ -2,9 +2,12 @@ import logging
 import threading
 import json
 import time
+import traceback
+
 from SimpleWebSocketServer import SimpleWebSocketServer, WebSocket
 import simplepybotsdk.configurations as configurations
 from simplepybotsdk.robotSDK import RobotSDK as RobotSDK
+from simplepybotsdk.parserJSONCommands import ParserJSONCommands
 
 logger = logging.getLogger(__name__)
 robot_instance = None
@@ -30,12 +33,16 @@ class RobotWebSocketSDK(RobotSDK):
         self._web_socket_port = socket_port
         self._web_socket_send_per_second = socket_send_per_second
         self.web_socket_threaded_connection = set()
+        self.message_parsers = []
         if self._web_socket_send_per_second is None:
             self._web_socket_send_per_second = configurations.WEB_SOCKET_SEND_PER_SECOND
 
         if self._web_socket_send_per_second <= 0:
             logger.debug("RobotWebSocketSDK disabled")
             return
+        if "enable_parser_json_commands" in self.configuration and self.configuration["enable_parser_json_commands"]:
+            self.message_parsers.append(ParserJSONCommands)
+
         logger.debug("RobotWebSocketSDK initialization")
 
         self._thread_web_socket_send_data = None
@@ -72,7 +79,7 @@ class RobotWebSocketSDK(RobotSDK):
     def _web_socket_send_data_handler(self):
         """
         Thread dedicated of sending realtime date to client, in the correct format.
-        This thread send to the client a JSON dump of current state of the robot.
+        This thread sends to the client a JSON dump of current state of the robot.
         """
         last_time = 0
         j_relative = None
@@ -87,11 +94,23 @@ class RobotWebSocketSDK(RobotSDK):
                     for client in self.web_socket_threaded_connection:
                         if client.message_format == "relative":
                             if j_relative is None:
-                                j_relative = json.dumps(self.get_robot_dict_status(absolute=False)).encode("utf-8")
+                                j_relative = json.dumps({
+                                    "type": "R2C",
+                                    "data": {
+                                        "area": "status",
+                                        "action": "live_status",
+                                        "value": self.get_robot_dict_status(absolute=False)
+                                    }}).encode("utf-8")
                             client.sendMessage(j_relative)
                         elif client.message_format == "absolute":
                             if j_absolute is None:
-                                j_absolute = json.dumps(self.get_robot_dict_status(absolute=True)).encode("utf-8")
+                                j_absolute = json.dumps({
+                                    "type": "R2C",
+                                    "data": {
+                                        "area": "status",
+                                        "action": "live_status",
+                                        "value": self.get_robot_dict_status(absolute=True)
+                                    }}).encode("utf-8")
                             client.sendMessage(j_absolute)
                     j_relative = None
                     j_absolute = None
@@ -99,10 +118,11 @@ class RobotWebSocketSDK(RobotSDK):
             logger.info("[websocket_thread_send_data]: stopped due to inactivity")
             self._thread_web_socket_send_data = None
         except Exception as e:
+            logger.error(traceback.format_exc())
             logger.error("[websocket_thread_send_data]: _web_socket_send_data_handler crashed: {}".format(e))
             self._thread_web_socket_send_data = None
 
-    def web_socket_handle_incoming_message(self, socket, message, addr):
+    def web_socket_handle_incoming_message(self, socket: WebSocket, message, addr):
         """
         Method to decode the data coming from the client. Only JSON data will be accepted.
         :param socket: socket connection instance.
@@ -124,17 +144,24 @@ class RobotWebSocketSDK(RobotSDK):
                     f = j["socket"]["format"]
                     logger.debug("[websocket_thread]: connection: {} now use format: {}".format(addr, f))
                     socket.message_format = f
-                self.web_socket_recv_callback(j, addr)
+                self.web_socket_recv_callback(j, addr, socket)
+                for mp in self.message_parsers:
+                    mp_instance = mp(self)
+                    response = mp_instance(j)
+                    if response is not None:
+                        socket.sendMessage(json.dumps(response).encode("utf-8"))
             except Exception as e:
+                logger.error(traceback.format_exc())
                 logger.error("[websocket_thread]: fail to decode message from: {}: {}. {}".format(addr, data, e))
                 if self.show_log_message:
                     print("[websocket_thread]: fail to decode message from: {}: {}. {}".format(addr, data, e))
 
-    def web_socket_recv_callback(self, message: dict, addr: tuple):
+    def web_socket_recv_callback(self, message: dict, addr: tuple, socket: WebSocket):
         """
         Method called when a message is received. Override this to parse message.
         :param message: json message received.
         :param addr: tuple with ip and socket of the client that send the message.
+        :param socket: the socket connection.
         """
         pass
 

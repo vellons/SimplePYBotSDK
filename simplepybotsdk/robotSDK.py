@@ -2,6 +2,7 @@ import logging
 import threading
 import json
 import time
+import traceback
 from datetime import datetime
 import simplepybotsdk.configurations as configurations
 from simplepybotsdk import Sensor, Motor
@@ -59,6 +60,7 @@ class RobotSDK:
             with open(self.config_path) as f:
                 self.configuration = json.load(f)
         except Exception as e:
+            logger.error(traceback.format_exc())
             logger.error("Initialization configuration error: exception: {}".format(e))
             print("Initialization configuration error: exception: {}".format(e))
             raise RobotSDKInitError("Initialization configuration error: exception: {}".format(e))
@@ -126,12 +128,11 @@ class RobotSDK:
                             elif step < -max_step:
                                 step = -max_step
 
-                            logger.debug("[motors_thread]: {}: {:.2f} -> {:.2f} [{:.2f}]".format(m.key,
-                                                                                                 m.abs_current_angle,
-                                                                                                 m.abs_goal_angle,
-                                                                                                 step))
+                            logger.debug("[motors_thread]: {}: {:.2f} -> {:.2f} [{:.2f}]"
+                                         .format(m.key, m.abs_current_angle, m.abs_goal_angle, step))
                             m.abs_current_angle = m.abs_current_angle + step
                 except Exception as e:
+                    logger.error(traceback.format_exc())
                     logger.error("[motors_thread]: exception: {}".format(e))
                     print("[motors_thread]: exception: {}".format(e))
                     pass
@@ -243,6 +244,7 @@ class RobotSDK:
                         self.poses = self.motion_configuration["poses"]
                     logger.debug("Loaded {} poses from motion configuration".format(len(self.poses)))
         except Exception as e:
+            logger.error(traceback.format_exc())
             logger.error("Motion configuration error: exception: {}".format(e))
             print("Motion configuration error: exception: {}".format(e))
             raise RobotSDKInitError("Motion configuration error: exception: {}".format(e))

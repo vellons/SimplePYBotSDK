@@ -4,6 +4,7 @@
   "name": "Example robot configuration for Webots",
   "motion_file": "./example_webots_khr2hv_motion.json",
   "enable_twist_controller": true,
+  "enable_parser_json_commands": true,
   "motors": {
     "head_z": {
       "id": "Head",
