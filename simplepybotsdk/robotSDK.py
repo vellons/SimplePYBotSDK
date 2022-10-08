@@ -262,14 +262,13 @@ class RobotSDK:
 
     def create_pose(self, pose_name: str, pose_dict: dict, save_to_motion_file: bool = True):
         """
-        Method to create a new pose.
+        Method to create or override a pose.
         :param pose_name: the name of the new pose.
         :param pose_dict: dict of {"key": goal_angle, "key": goal_angle}.
         :param save_to_motion_file: if True will edit the motion file or create if not exist.
         """
-        if pose_name in self.poses:
-            logger.warning("create_pose: motor with key '{}' not exist".format(pose_name))
-            raise RobotKeyError("create_pose: pose with key '{}' already exist".format(pose_name))
+        if self.poses is not None and pose_name in self.poses:
+            logger.warning("create_pose: pose with key '{}' overwritten".format(pose_name))
 
         for item in pose_dict:
             m = self.get_motor(item)
