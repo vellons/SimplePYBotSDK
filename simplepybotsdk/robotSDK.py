@@ -281,6 +281,22 @@ class RobotSDK:
         if save_to_motion_file:
             self.save_motion_file()
 
+    def delete_pose(self, pose_name: str, save_to_motion_file: bool = True):
+        """
+        Method to delete a pose.
+        :param pose_name: the name of the pose to delete.
+        :param save_to_motion_file: if True will edit the motion file or create if not exist.
+        """
+        if self.poses is not None and pose_name in self.poses:
+            del self.poses[pose_name]
+            self.motion_configuration["poses"] = self.poses
+            logger.info("delete_pose: pose with key '{}' deleted".format(pose_name))
+            if save_to_motion_file:
+                self.save_motion_file()
+        else:
+            logger.warning("delete_pose: pose with key '{}' not exist".format(pose_name))
+            raise RobotKeyError("delete_pose: pose with key '{}' not exist".format(pose_name))
+
     def go_to_pose(self, pose_name: str, seconds: float = 0, blocking: bool = False):
         """
         Method to move the robot in a specific pose defined in the configuration file.
