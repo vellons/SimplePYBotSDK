@@ -35,10 +35,14 @@
       "r_shoulder_y": 90,
       "r_elbow_y": 100
     },
-    "hello_right2": {
-      "r_shoulder_x": 0,
-      "r_shoulder_y": 90,
-      "r_elbow_y": 70
+    "Tree": {
+      "head_z": 0,
+      "l_shoulder_x": 63,
+      "r_shoulder_x": -67,
+      "l_shoulder_y": 126,
+      "r_shoulder_y": 43,
+      "l_elbow_y": 24,
+      "r_elbow_y": -39
     }
   },
   "performances": {
