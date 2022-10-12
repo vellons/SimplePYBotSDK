@@ -51,19 +51,24 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
         with Configurator() as config:
             config.add_route("hello_world", self.rest_base_url + "/")
             config.add_view(self._rest_hello_world, route_name="hello_world")
+
             config.add_route("rest_configuration", self.rest_base_url + "/configuration/",
                              request_method=["GET", "OPTIONS"])
             config.add_view(self._rest_robot_configuration, route_name="rest_configuration")
+
             config.add_route("rest_motion", self.rest_base_url + "/motion/", request_method=["GET", "OPTIONS"])
             config.add_view(self._rest_robot_motion, route_name="rest_motion")
+
             config.add_route("rest_status", self.rest_base_url + "/status/", request_method="GET")
             config.add_view(self._rest_robot_status, route_name="rest_status")
             config.add_route("rest_status_abs", self.rest_base_url + "/status/absolute/", request_method="GET")
             config.add_view(self._rest_robot_status_absolute, route_name="rest_status_abs")
+
             config.add_route("rest_sdk_info", self.rest_base_url + "/sdk/", request_method="GET")
             config.add_view(self._rest_robot_sdk_info, route_name="rest_sdk_info")
             config.add_route("rest_sdk_patch", self.rest_base_url + "/sdk/", request_method=["PATCH", "OPTIONS"])
             config.add_view(self._rest_robot_sdk_patch, route_name="rest_sdk_patch")
+
             config.add_route("rest_motors", self.rest_base_url + "/motors/", request_method="GET")
             config.add_view(self._rest_robot_motors, route_name="rest_motors")
             config.add_route("rest_motor_by_key", self.rest_base_url + "/motors/{key}/", request_method="GET")
@@ -71,6 +76,7 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
             config.add_route("rest_motor_patch_by_key", self.rest_base_url + "/motors/{key}/",
                              request_method=["PATCH", "OPTIONS"])
             config.add_view(self._rest_robot_motor_patch_by_key, route_name="rest_motor_patch_by_key")
+
             config.add_route("rest_go_to_pose", self.rest_base_url + "/go-to-pose/{key}/",
                              request_method=["POST", "OPTIONS"])
             config.add_view(self._rest_robot_go_to_pose, route_name="rest_go_to_pose")
@@ -78,17 +84,25 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
             config.add_view(self._rest_robot_poses, route_name="rest_poses")
             config.add_route("rest_new_pose", self.rest_base_url + "/poses/{key}/", request_method=["POST", "OPTIONS"])
             config.add_view(self._rest_robot_new_poses, route_name="rest_new_pose")
+            config.add_route("rest_delete_pose", self.rest_base_url + "/poses/{key}/", request_method=["DELETE", "OPTIONS"])
+            config.add_view(self._rest_robot_delete_pose, route_name="rest_delete_pose")
+            config.add_route("rest_pose_by_key", self.rest_base_url + "/poses/{key}/", request_method="GET")
+            config.add_view(self._rest_robot_pose_detail_by_key, route_name="rest_pose_by_key")
+
             config.add_route("rest_move_point_to_point", self.rest_base_url + "/move-point-to-point/",
                              request_method=["POST", "OPTIONS"])
             config.add_view(self._rest_robot_move_point_to_point, route_name="rest_move_point_to_point")
+
             config.add_route("rest_sensors", self.rest_base_url + "/sensors/", request_method="GET")
             config.add_view(self._rest_robot_sensors, route_name="rest_sensors")
             config.add_route("rest_sensors_by_key", self.rest_base_url + "/sensors/{key}/", request_method="GET")
             config.add_view(self._rest_robot_sensors_detail_by_key, route_name="rest_sensors_by_key")
             config.add_route("rest_twist", self.rest_base_url + "/twist/", request_method="GET")
             config.add_view(self._rest_robot_twist, route_name="rest_twist")
+
             config.add_route("rest_move_twist", self.rest_base_url + "/twist/", request_method=["POST", "OPTIONS"])
             config.add_view(self._rest_robot_move_twist, route_name="rest_move_twist")
+            
             config.add_route("rest_custom_post", self.rest_base_url + "/" + self.rest_custom_url + "/",
                              request_method=["POST", "OPTIONS"])
             config.add_view(self._rest_robot_custom_post, route_name="rest_custom_post")
@@ -203,6 +217,22 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
         except RobotKeyError as e:
             return Response(json_body={"detail": str(e)}, status=400)
         return Response(json_body=pose)
+
+    def _rest_robot_pose_detail_by_key(self, root, request):
+        pose_name = request.matchdict["key"]
+        if pose_name not in self.poses:
+            return Response(json_body={"detail": "Not found."}, status=404)
+        return Response(json_body=self.poses[pose_name])
+
+    def _rest_robot_delete_pose(self, root, request):
+        if request.method == "OPTIONS":
+            return Response(json_body={})
+        pose_name = request.matchdict["key"]
+        try:
+            self.delete_pose(pose_name)
+        except RobotKeyError as e:
+            return Response(json_body={"detail": str(e)}, status=400)
+        return Response(json_body={"detail": "Pose deleted"})
 
     def _rest_robot_go_to_pose(self, root, request):
         if request.method == "OPTIONS":
