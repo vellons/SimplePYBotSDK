@@ -226,6 +226,25 @@
 		{
 			"name": "poses/{key}/",
 			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/poses/standby/",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"poses",
+						"standby",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "poses/{key}/",
+			"request": {
 				"method": "POST",
 				"header": [],
 				"body": {
@@ -245,6 +264,25 @@
 					"path": [
 						"poses",
 						"test1",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "poses/{key}/",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{server}}/poses/standby/",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"poses",
+						"standby",
 						""
 					]
 				}

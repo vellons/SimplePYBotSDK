@@ -240,6 +240,7 @@ class RobotSDK:
                         x = self.poses.copy()
                         x.update(self.motion_configuration["poses"])
                         self.poses = x
+                        self.motion_configuration["poses"] = self.poses
                     else:
                         self.poses = self.motion_configuration["poses"]
                     logger.debug("Loaded {} poses from motion configuration".format(len(self.poses)))
