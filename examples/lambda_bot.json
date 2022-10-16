@@ -1,0 +1,98 @@
+{
+  "id": "lambda_bot",
+  "version": "1.0",
+  "name": "Lambda",
+  "enable_twist_controller": true,
+  "enable_parser_json_commands": true,
+  "motion_file": "lambda_motion.json",
+  "motors": {
+    "testa": {
+      "id": 8,
+      "offset": 135,
+      "type": "servo270",
+      "angle_limit": [
+        -90,
+        60
+      ],
+      "orientation": "direct"
+    },
+    "body_z": {
+      "id": 1,
+      "offset": 82,
+      "type": "servo",
+      "angle_limit": [
+        -80,
+        90
+      ],
+      "orientation": "direct"
+    },
+    "spalla_pan": {
+      "id": 2,
+      "offset": 125,
+      "type": "servo270",
+      "angle_limit": [
+        -125,
+        145
+      ],
+      "orientation": "direct"
+    },
+    "spalla_tilt": {
+      "id": 3,
+      "offset": 135,
+      "type": "servo270",
+      "angle_limit": [
+        -75,
+        135
+      ],
+      "orientation": "direct"
+    },
+    "gomito": {
+      "id": 4,
+      "offset": 130,
+      "type": "servo270",
+      "angle_limit": [
+        -90,
+        140
+      ],
+      "orientation": "direct"
+    },
+    "polso_tilt": {
+      "id": 5,
+      "offset": 135,
+      "type": "servo270",
+      "angle_limit": [
+        -75,
+        135
+      ],
+      "orientation": "direct"
+    },
+    "polso_pan": {
+      "id": 6,
+      "offset": 135,
+      "type": "servo270",
+      "angle_limit": [
+        -135,
+        135
+      ],
+      "orientation": "direct"
+    },
+    "pinza": {
+      "id": 7,
+      "offset": 135,
+      "type": "servo270",
+      "angle_limit": [
+        -22,
+        30
+      ],
+      "orientation": "direct"
+    }
+  },
+  "motors_type": {
+    "servo": {
+      "angle_speed": 30
+    },
+    "servo270": {
+      "angle_speed": 30
+    }
+  }
+}

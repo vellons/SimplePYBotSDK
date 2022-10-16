@@ -1,0 +1,68 @@
+{
+  "id": "lambda_motion_v1",
+  "version": "1.0",
+  "poses": {
+    "idle": {
+      "testa": 0,
+      "body_z": 0,
+      "spalla_pan": -90,
+      "spalla_tilt": 0,
+      "gomito": 0,
+      "polso_tilt": 0,
+      "polso_pan": 0,
+      "pinza": 0
+    },
+    "standby": {
+      "testa": 0,
+      "body_z": 0,
+      "spalla_pan": 0,
+      "spalla_tilt": 0,
+      "gomito": 0,
+      "polso_tilt": 0,
+      "polso_pan": 0,
+      "pinza": 0
+    },
+    "standby_braccio": {
+      "spalla_pan": 0,
+      "spalla_tilt": 0,
+      "gomito": 0,
+      "polso_tilt": 0,
+      "polso_pan": 0
+    },
+    "braccio_stabile_1": {
+      "testa": 0,
+      "spalla_pan": -45,
+      "spalla_tilt": 52,
+      "gomito": 52,
+      "polso_tilt": 52,
+      "polso_pan": -52
+    },
+    "braccio_stabile_2": {
+      "testa": 0,
+      "spalla_pan": -127,
+      "spalla_tilt": 52,
+      "gomito": 52,
+      "polso_tilt": 52,
+      "polso_pan": 30
+    },
+    "prendi": {
+      "testa": -60,
+      "body_z": -67,
+      "spalla_pan": -45,
+      "spalla_tilt": 22,
+      "gomito": 30,
+      "polso_tilt": 7,
+      "polso_pan": -15
+    },
+    "appoggia": {
+      "testa": -30,
+      "body_z": -75,
+      "spalla_pan": 10,
+      "spalla_tilt": -19,
+      "gomito": -30,
+      "polso_tilt": -40,
+      "polso_pan": 35
+    }
+  },
+  "performances": {}
+}
