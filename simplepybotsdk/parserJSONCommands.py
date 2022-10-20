@@ -56,7 +56,7 @@ class ParserJSONCommands(ParserJSON):
                 }
 
             # Move one or more motors
-            if data["area"] == "motors" and "commands" in data and type(data["commands"]):
+            if data["area"] == "motors" and "commands" in data and type(data["commands"]) == list:
                 try:
                     for c in data["commands"]:
                         m = self.robot.get_motor(c["key"])
@@ -68,6 +68,18 @@ class ParserJSONCommands(ParserJSON):
                 except Exception as e:
                     logger.warning("Error parsing the C2R motors message {} {}".format(message, e))
                 return None
+
+            # Move point to point
+            if data["area"] == "motion" and "action" in data:
+                if data["action"] == "ptp" and "command" in data and type(data["command"]) == dict:
+                    try:
+                        ptp = data["command"]
+                        seconds = ptp["seconds"] if "seconds" in ptp else 0
+                        blocking = ptp["blocking"] if "blocking" in ptp else False
+                        self.robot.move_point_to_point(ptp, seconds, blocking)
+                    except Exception as e:
+                        logger.warning("Error parsing the C2R motion ptp message {} {}".format(message, e))
+                    return None
 
             # Move twist
             if data["area"] == "twist" and "go" in data:

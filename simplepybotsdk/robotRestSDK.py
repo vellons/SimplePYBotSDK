@@ -306,11 +306,14 @@ class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotS
         if request.method == "OPTIONS":
             return Response(json_body={})
         response = {"detail": "rest_custom_post() method"}
-        self.rest_custom_post(request.json_body)
+        ret = self.rest_custom_post(request.json_body)
+        if ret is not None:
+            response = ret
         return Response(json_body=response)
 
     def rest_custom_post(self, body):
         print("rest_custom_post(): {}".format(body))
+        return None
 
 
 def add_cors_headers_response_callback(event):
