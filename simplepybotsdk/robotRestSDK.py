@@ -1,6 +1,5 @@
 import logging
 import threading
-import os
 from pyramid.config import Configurator
 from pyramid.response import Response
 from pyramid.events import NewRequest
@@ -8,14 +7,12 @@ from wsgiref.simple_server import make_server
 import simplepybotsdk.configurations as configurations
 from simplepybotsdk.exceptions import RobotKeyError
 from simplepybotsdk.robotWebSocketSDK import RobotWebSocketSDK as RobotWebSocketSDK
-from simplepybotsdk.robotSocketSDK import RobotSocketSDK as RobotSocketSDK
 from simplepybotsdk.twist import TwistVector
 
 logger = logging.getLogger(__name__)
-SOCKET_AS_WEB_SOCKET = os.getenv('SOCKET_AS_WEB_SOCKET', True)
 
 
-class RobotRESTSDK(RobotWebSocketSDK if SOCKET_AS_WEB_SOCKET is True else RobotSocketSDK):
+class RobotRESTSDK(RobotWebSocketSDK):
     """RobotSDK + RobotWebSocketSDK + REST robot's component control with Pyramid."""
 
     def __init__(self, config_path: str, socket_host: str, socket_port: int, rest_host: str, rest_port: int,
